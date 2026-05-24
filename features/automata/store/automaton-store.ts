@@ -35,6 +35,7 @@ interface AutomatonStore {
   setPendingConnection: (from: string, to: string) => void;
   clearPendingConnection: () => void;
   selectState: (stateId: string | null) => void;
+  loadAutomaton: (automaton: Automaton) => void;
   reset: () => void;
 }
 
@@ -218,6 +219,17 @@ export const useAutomatonStore = create<AutomatonStore>((set, get) => ({
   setPendingConnection: (from, to) => set({ pendingConnection: { from, to } }),
   clearPendingConnection: () => set({ pendingConnection: null }),
   selectState: (stateId) => set({ selectedStateId: stateId }),
+
+  loadAutomaton: (automaton) =>
+    set({
+      automaton: applyAlphabet({
+        ...automaton,
+        states: automaton.states.map((st) => ({ ...st })),
+        transitions: automaton.transitions.map((t) => ({ ...t })),
+      }),
+      selectedStateId: null,
+      pendingConnection: null,
+    }),
 
   reset: () =>
     set({

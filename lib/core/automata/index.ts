@@ -16,3 +16,15 @@ export {
   validateCompleteness,
   validateDeterministic,
 } from './validate';
+export { epsilonClosure, epsilonTransitionsUsed, sortStateIds } from './epsilon-closure';
+export {
+  buildSimulationTrace,
+  getOutcomeLabel,
+  getStepSymbolDisplay,
+} from './simulation';
+export type {
+  SimulationOutcome,
+  SimStep,
+  SimStepKind,
+  SimulationTrace,
+} from './simulation';

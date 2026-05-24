@@ -12,6 +12,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useAutomatonStore } from '../store/automaton-store';
+import { useSimulationStore } from '../store/simulation-store';
 import { automatonToEdges, automatonToNodes } from '../adapters/react-flow';
 import { StateNode } from './state-node';
 
@@ -23,8 +24,26 @@ export function AutomatonCanvas() {
   const setPendingConnection = useAutomatonStore((s) => s.setPendingConnection);
   const selectState = useAutomatonStore((s) => s.selectState);
 
-  const nodes = useMemo(() => automatonToNodes(automaton), [automaton]);
-  const edges = useMemo(() => automatonToEdges(automaton), [automaton]);
+  const trace = useSimulationStore((s) => s.trace);
+  const currentStepIndex = useSimulationStore((s) => s.currentStepIndex);
+
+  const highlight = useMemo(() => {
+    const step = trace?.steps[currentStepIndex];
+    if (!step) return undefined;
+    return {
+      activeStateIds: step.activeStateIds,
+      activeTransitionIds: step.appliedTransitionIds,
+    };
+  }, [trace, currentStepIndex]);
+
+  const nodes = useMemo(
+    () => automatonToNodes(automaton, highlight),
+    [automaton, highlight]
+  );
+  const edges = useMemo(
+    () => automatonToEdges(automaton, highlight),
+    [automaton, highlight]
+  );
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {

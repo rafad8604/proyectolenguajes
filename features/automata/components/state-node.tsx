@@ -23,7 +23,10 @@ export function StateNode({ data, selected }: NodeProps) {
           nodeData.isAccepting
             ? 'border-neutral-900 dark:border-neutral-100 ring-2 ring-neutral-900 ring-offset-2 dark:ring-neutral-100 dark:ring-offset-neutral-950'
             : 'border-neutral-400 dark:border-neutral-500',
+          nodeData.isActive &&
+            'border-blue-600 bg-blue-50 ring-4 ring-blue-400/50 dark:border-blue-400 dark:bg-blue-950',
           selected &&
+            !nodeData.isActive &&
             'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-neutral-950'
         )}
       >

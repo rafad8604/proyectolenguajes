@@ -7,6 +7,7 @@ import { TransitionForm } from './transition-form';
 import { TransitionTable } from './transition-table';
 import { FormalDefinitionPanel } from './formal-definition-panel';
 import { ValidationPanel } from './validation-panel';
+import { SimulationPanel } from './simulation-panel';
 
 export function AutomatonEditor() {
   return (
@@ -32,6 +33,10 @@ export function AutomatonEditor() {
           <FormalDefinitionPanel />
         </section>
       </div>
+      <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+        <h3 className="mb-3 text-sm font-semibold">Simulación</h3>
+        <SimulationPanel />
+      </section>
       <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
         <ValidationPanel />
       </section>

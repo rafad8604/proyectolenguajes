@@ -7,9 +7,19 @@ export interface StateNodeData extends Record<string, unknown> {
   stateId: string;
   isInitial: boolean;
   isAccepting: boolean;
+  isActive?: boolean;
 }
 
-export function automatonToNodes(automaton: Automaton): Node<StateNodeData>[] {
+export interface AutomatonGraphHighlight {
+  activeStateIds?: string[];
+  activeTransitionIds?: string[];
+}
+
+export function automatonToNodes(
+  automaton: Automaton,
+  highlight?: AutomatonGraphHighlight
+): Node<StateNodeData>[] {
+  const active = new Set(highlight?.activeStateIds ?? []);
   return automaton.states.map((state) => ({
     id: state.id,
     type: 'stateNode',
@@ -19,20 +29,36 @@ export function automatonToNodes(automaton: Automaton): Node<StateNodeData>[] {
       stateId: state.id,
       isInitial: state.isInitial,
       isAccepting: state.isAccepting,
+      isActive: active.has(state.id),
     },
   }));
 }
 
-export function automatonToEdges(automaton: Automaton): Edge[] {
-  return automaton.transitions.map((t) => ({
-    id: t.id,
-    source: t.from,
-    target: t.to,
-    label: t.isEpsilon ? EPSILON_SYMBOL : t.symbol,
-    type: 'smoothstep',
-    animated: t.isEpsilon,
-    style: t.isEpsilon ? { strokeDasharray: '5 5' } : undefined,
-  }));
+export function automatonToEdges(
+  automaton: Automaton,
+  highlight?: AutomatonGraphHighlight
+): Edge[] {
+  const activeTransitions = new Set(highlight?.activeTransitionIds ?? []);
+  return automaton.transitions.map((t) => {
+    const isActive = activeTransitions.has(t.id);
+    return {
+      id: t.id,
+      source: t.from,
+      target: t.to,
+      label: t.isEpsilon ? EPSILON_SYMBOL : t.symbol,
+      type: 'smoothstep',
+      animated: t.isEpsilon || isActive,
+      style: {
+        ...(t.isEpsilon ? { strokeDasharray: '5 5' } : {}),
+        ...(isActive
+          ? { stroke: '#2563eb', strokeWidth: 3 }
+          : {}),
+      },
+      labelStyle: isActive
+        ? { fill: '#2563eb', fontWeight: 700 }
+        : undefined,
+    };
+  });
 }
 
 export function extractPositionUpdates(
