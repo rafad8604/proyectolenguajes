@@ -28,3 +28,13 @@ export type {
   SimStepKind,
   SimulationTrace,
 } from './simulation';
+export {
+  convertNfaToDfa,
+  formatSubsetLabel,
+  subsetKey,
+} from './nfa-to-dfa';
+export type {
+  ConversionTableRow,
+  ConversionExplanationStep,
+  NfaToDfaResult,
+} from './nfa-to-dfa';

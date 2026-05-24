@@ -6,10 +6,21 @@ import { useSimulationStore } from '../store/simulation-store';
 import { getOutcomeLabel, getStepSymbolDisplay } from 'lib/core/automata';
 import { cn } from 'lib/utils/cn';
 import { AUTOMATON_PRESETS } from '../examples/presets';
+import type { Automaton } from 'types/automaton';
 
-export function SimulationPanel() {
-  const automaton = useAutomatonStore((s) => s.automaton);
+interface SimulationPanelProps {
+  /** Autómata a simular; por defecto el del store del editor. */
+  automaton?: Automaton;
+  showPresets?: boolean;
+}
+
+export function SimulationPanel({
+  automaton: automatonProp,
+  showPresets = true,
+}: SimulationPanelProps) {
+  const storeAutomaton = useAutomatonStore((s) => s.automaton);
   const loadAutomaton = useAutomatonStore((s) => s.loadAutomaton);
+  const automaton = automatonProp ?? storeAutomaton;
 
   const input = useSimulationStore((s) => s.input);
   const trace = useSimulationStore((s) => s.trace);
@@ -71,7 +82,7 @@ export function SimulationPanel() {
 
   useEffect(() => {
     resetSimulation();
-  }, [automatonSignature, resetSimulation]);
+  }, [automatonSignature, resetSimulation, automatonProp]);
 
   const handleStart = () => runSimulation(automaton);
 
@@ -106,6 +117,7 @@ export function SimulationPanel() {
         </button>
       </div>
 
+      {showPresets && (
       <div className="flex flex-wrap gap-2">
         <span className="text-xs font-medium text-neutral-500">Ejemplos:</span>
         {AUTOMATON_PRESETS.map((preset) => (
@@ -123,6 +135,7 @@ export function SimulationPanel() {
           </button>
         ))}
       </div>
+      )}
 
       {trace?.error && (
         <p className="text-sm text-red-600 dark:text-red-400">{trace.error}</p>

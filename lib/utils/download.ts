@@ -1,0 +1,14 @@
+/** Descarga un archivo de texto en el navegador. */
+export function downloadTextFile(
+  content: string,
+  filename: string,
+  mimeType = 'application/xml'
+): void {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { AutomatonEditor } from 'features/automata/components/automaton-editor';
 
 export const metadata: Metadata = {
@@ -19,6 +20,12 @@ export default function AutomatasPage() {
           editando la tabla. La definición formal y las validaciones se actualizan
           en tiempo real.
         </p>
+        <Link
+          href="/automatas/conversion"
+          className="mt-3 inline-block text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+        >
+          Convertir AFND → AFD (construcción por subconjuntos) →
+        </Link>
       </header>
       <AutomatonEditor />
     </section>

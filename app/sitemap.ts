@@ -6,6 +6,7 @@ export default function sitemap() {
   const routes = [
     '',
     '/automatas',
+    '/automatas/conversion',
     '/turing',
     '/gramaticas',
     '/thompson',
