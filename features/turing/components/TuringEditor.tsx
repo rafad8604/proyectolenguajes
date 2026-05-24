@@ -4,6 +4,7 @@ import { useTuringStore } from '../store/turing-store';
 import { TuringStatePanel } from './TuringStatePanel';
 import { TuringTransitionTable } from './TuringTransitionTable';
 import { TuringSimulationPanel } from './TuringSimulationPanel';
+import { JflapImportExport } from 'features/jflap/components/JflapImportExport';
 
 function parseSymbolList(value: string): string[] {
   return value
@@ -22,6 +23,10 @@ export function TuringEditor() {
 
   return (
     <div className="space-y-6">
+      <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+        <h2 className="mb-3 text-sm font-semibold">JFLAP (.jff)</h2>
+        <JflapImportExport mode="turing" />
+      </section>
       <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
         <h2 className="mb-3 text-sm font-semibold">Configuración</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

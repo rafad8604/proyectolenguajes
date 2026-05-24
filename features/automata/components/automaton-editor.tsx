@@ -9,6 +9,7 @@ import { FormalDefinitionPanel } from './formal-definition-panel';
 import { ValidationPanel } from './validation-panel';
 import { SimulationPanel } from './simulation-panel';
 import { GrammarViewer } from 'features/grammar/components/GrammarViewer';
+import { JflapImportExport } from 'features/jflap/components/JflapImportExport';
 import { useAutomatonStore } from '../store/automaton-store';
 
 function GrammarSection() {
@@ -20,6 +21,10 @@ export function AutomatonEditor() {
   return (
     <div className="space-y-4">
       <StateToolbar />
+      <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+        <h3 className="mb-3 text-sm font-semibold">JFLAP (.jff)</h3>
+        <JflapImportExport mode="automaton" />
+      </section>
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <AutomatonCanvas />
         <aside className="space-y-4">

@@ -1,2 +1,24 @@
-export { serializeAutomatonToJflap } from './serialize-fa';
-export const JFLAP_VERSION = '0.2.0';
+export type {
+  JffDocumentType,
+  JffModelKind,
+  JffParseSuccess,
+  JffParseFailure,
+  JffParseResult,
+  JffExportTarget,
+} from './types';
+
+export {
+  parseJff,
+  parseJffFile,
+  parseJflapXml,
+} from './parse-jff';
+
+export {
+  exportToJff,
+  exportAutomatonToJff,
+  exportTuringToJff,
+  defaultJffFilename,
+  serializeAutomatonToJflap,
+} from './export-jff';
+
+export const JFLAP_VERSION = '1.0.0';
