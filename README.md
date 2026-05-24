@@ -1,42 +1,47 @@
-# Portfolio Blog Starter
+# Laboratorio de Lenguajes Formales
 
-This is a porfolio site template complete with a blog. Includes:
+Aplicación web educativa en español para construir, simular y analizar modelos de teoría de lenguajes formales.
 
-- MDX and Markdown support
-- Optimized for SEO (sitemap, robots, JSON-LD schema)
-- RSS Feed
-- Dynamic OG images
-- Syntax highlighting
-- Tailwind v4
-- Vercel Speed Insights / Web Analytics
-- Geist font
+## Módulos (en desarrollo)
 
-## Demo
+- **Autómatas finitos** — AFD, AFND, conversión y simulación
+- **Máquinas de Turing** — 1 y 2 bandas
+- **Gramáticas** — Jerarquía de Chomsky
+- **Thompson** — Expresiones regulares → AFND
+- **Lema de bombeo** — Asistente guiado
+- **JFLAP** — Importar / exportar archivos `.jff`
 
-https://portfolio-blog-starter.vercel.app
+## Requisitos
 
-## How to Use
+- Node.js 18+
+- [pnpm](https://pnpm.io/)
 
-You can choose from one of the following two methods to use this repository:
-
-### One-Click Deploy
-
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=vercel-examples):
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vercel/examples/tree/main/solutions/blog&project-name=blog&repository-name=blog)
-
-### Clone and Deploy
-
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [pnpm](https://pnpm.io/installation) to bootstrap the example:
+## Desarrollo local
 
 ```bash
-pnpm create next-app --example https://github.com/vercel/examples/tree/main/solutions/blog blog
-```
-
-Then, run Next.js in development mode:
-
-```bash
+pnpm install
 pnpm dev
 ```
 
-Deploy it to the cloud with [Vercel](https://vercel.com/templates) ([Documentation](https://nextjs.org/docs/app/building-your-application/deploying)).
+Abre [http://localhost:3000](http://localhost:3000).
+
+## Producción
+
+```bash
+pnpm build
+pnpm start
+```
+
+## Despliegue
+
+Compatible con [Vercel](https://vercel.com). Conecta el repositorio y despliega con el comando de build por defecto (`next build`).
+
+## Estructura
+
+```
+app/           # Rutas y páginas Next.js
+components/    # UI reutilizable
+features/      # Lógica por módulo (automata, turing, grammar, etc.)
+lib/           # Algoritmos (core), JFLAP y utilidades
+types/         # Modelos TypeScript compartidos
+```
