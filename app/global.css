@@ -35,3 +35,10 @@ select {
   -moz-appearance: none;
   appearance: none;
 }
+
+@media print {
+  header nav,
+  footer {
+    display: none !important;
+  }
+}
