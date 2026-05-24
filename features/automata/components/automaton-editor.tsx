@@ -8,6 +8,13 @@ import { TransitionTable } from './transition-table';
 import { FormalDefinitionPanel } from './formal-definition-panel';
 import { ValidationPanel } from './validation-panel';
 import { SimulationPanel } from './simulation-panel';
+import { GrammarViewer } from 'features/grammar/components/GrammarViewer';
+import { useAutomatonStore } from '../store/automaton-store';
+
+function GrammarSection() {
+  const automaton = useAutomatonStore((s) => s.automaton);
+  return <GrammarViewer automaton={automaton} />;
+}
 
 export function AutomatonEditor() {
   return (
@@ -36,6 +43,9 @@ export function AutomatonEditor() {
       <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
         <h3 className="mb-3 text-sm font-semibold">Simulación</h3>
         <SimulationPanel />
+      </section>
+      <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+        <GrammarSection />
       </section>
       <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
         <ValidationPanel />
