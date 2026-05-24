@@ -1,6 +1,4 @@
-/**
- * Módulo de máquinas de Turing (1 y 2 bandas).
- * La implementación del editor y la simulación se añadirá en fases posteriores.
- */
+export { TuringEditor } from './components/TuringEditor';
+export { TapeView } from './components/TapeView';
 
 export const TURING_MODULE = 'turing';
