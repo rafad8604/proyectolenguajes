@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ModuleIntro } from 'components/content/ModuleIntro';
 import { NfaToDfaPanel } from 'features/automata/components/nfa-to-dfa-panel';
 
 export const metadata: Metadata = {
@@ -20,6 +21,9 @@ export default function ConversionPage() {
           los subconjuntos que contienen algún estado final original.
         </p>
       </header>
+
+      <ModuleIntro conceptId="afnd" className="mb-6" />
+
       <NfaToDfaPanel />
     </section>
   );

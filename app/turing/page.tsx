@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ModuleIntro } from 'components/content/ModuleIntro';
 import { TuringEditor } from 'features/turing/components/TuringEditor';
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default function TuringPage() {
           de cinta(s) y cabezal(es).
         </p>
       </header>
+      <ModuleIntro conceptId="turing" className="mb-6" />
       <TuringEditor />
     </section>
   );

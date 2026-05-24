@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ModuleIntro } from 'components/content/ModuleIntro';
 import { JflapImportExport } from 'features/jflap/components/JflapImportExport';
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default function JflapPage() {
           base de datos.
         </p>
       </header>
+      <ModuleIntro conceptId="jflap" className="mb-6" />
       <JflapImportExport mode="auto" redirectOnImport={false} />
     </section>
   );

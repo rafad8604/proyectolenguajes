@@ -1,4 +1,4 @@
-export const CORE_VERSION = '0.7.0';
+export const CORE_VERSION = '1.0.0';
 
 export * from './automata';
 export * from './grammar';

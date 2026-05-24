@@ -9,36 +9,47 @@ export const mainModules: NavModule[] = [
     href: '/automatas',
     label: 'Autómatas finitos',
     description:
-      'Construye AFD y AFND, simula cadenas y convierte AFND a AFD.',
+      'Editor gráfico de AFD y AFND, simulación paso a paso, tabla δ y definición formal.',
+  },
+  {
+    href: '/automatas/conversion',
+    label: 'AFND → AFD',
+    description:
+      'Construcción por subconjuntos con pasos explicados y simulación del AFD resultante.',
   },
   {
     href: '/turing',
     label: 'Máquinas de Turing',
     description:
-      'Diseña máquinas de 1 o 2 bandas y simula su ejecución paso a paso.',
+      'Máquinas de 1 o 2 bandas con simulación de cinta y exportación JFLAP.',
   },
   {
     href: '/gramaticas',
     label: 'Gramáticas',
     description:
-      'Edita producciones y explora la jerarquía de Chomsky.',
+      'Editor de producciones, jerarquía de Chomsky y gramática regular desde autómata.',
   },
   {
     href: '/thompson',
     label: 'Thompson',
     description:
-      'Construye un AFND a partir de una expresión regular.',
+      'Expresión regular → AFND con tokenización, postfix y pasos del algoritmo.',
   },
   {
     href: '/lema-bombeo',
     label: 'Lema de bombeo',
     description:
-      'Asistente guiado para demostrar que un lenguaje no es regular.',
+      'Asistente guiado: p, w, división xyz y cadenas bombeadas xy^i z.',
   },
   {
     href: '/jflap',
-    label: 'Importar / Exportar JFLAP',
+    label: 'JFLAP',
     description:
-      'Carga y descarga ejercicios en formato .jff compatible con JFLAP.',
+      'Importar y exportar archivos .jff compatibles con JFLAP.',
   },
+];
+
+export const footerLinks: NavModule[] = [
+  { href: '/acerca', label: 'Acerca del proyecto', description: '' },
+  { href: '/', label: 'Inicio', description: '' },
 ];

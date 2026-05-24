@@ -292,7 +292,7 @@ export function PumpingLemmaWizard() {
 
             <section className="rounded-lg border p-4 dark:border-neutral-700">
               <h3 className="text-sm font-semibold">Cadenas bombeadas xy^i z</h3>
-              <div className="mt-3 overflow-x-auto">
+              <div className="mt-3 overflow-x-auto overflow-table">
                 <table className="w-full min-w-[280px] text-left text-sm">
                   <thead>
                     <tr className="border-b text-xs text-neutral-500 dark:border-neutral-700">

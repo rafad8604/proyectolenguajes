@@ -1,6 +1,8 @@
 'use client';
 
 import { useAutomatonStore } from '../store/automaton-store';
+import { AUTOMATON_PRESETS } from '../examples/presets';
+import { PresetBar } from 'components/ui/preset-bar';
 import type { AutomatonType } from 'types/automaton';
 
 export function StateToolbar() {
@@ -10,11 +12,22 @@ export function StateToolbar() {
   const removeState = useAutomatonStore((s) => s.removeState);
   const selectedStateId = useAutomatonStore((s) => s.selectedStateId);
   const reset = useAutomatonStore((s) => s.reset);
+  const loadAutomaton = useAutomatonStore((s) => s.loadAutomaton);
 
   const selectedState = automaton.states.find((s) => s.id === selectedStateId);
 
+  const handlePreset = (id: string) => {
+    const preset = AUTOMATON_PRESETS.find((p) => p.id === id);
+    if (preset) loadAutomaton(structuredClone(preset.automaton));
+  };
+
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-700 dark:bg-neutral-900">
+    <div className="space-y-3">
+      <PresetBar
+        presets={AUTOMATON_PRESETS.map((p) => ({ id: p.id, label: p.label }))}
+        onSelect={handlePreset}
+      />
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-700 dark:bg-neutral-900">
       <div className="flex items-center gap-2">
         <label htmlFor="automaton-type" className="text-sm font-medium">
           Tipo:
@@ -55,6 +68,7 @@ export function StateToolbar() {
       >
         Reiniciar
       </button>
+    </div>
     </div>
   );
 }

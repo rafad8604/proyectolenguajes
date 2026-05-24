@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ModuleIntro } from 'components/content/ModuleIntro';
 import { GrammarEditor } from 'features/grammar/components/GrammarEditor';
 import { GramaticasFromAutomatonPage } from 'features/grammar/components/gramaticas-from-automaton';
 
@@ -22,6 +23,7 @@ export default function GramaticasPage() {
 
       <div>
         <h2 className="mb-4 text-lg font-semibold">Editor y jerarquía de Chomsky</h2>
+        <ModuleIntro conceptId="grammar" className="mb-4" />
         <GrammarEditor />
       </div>
 

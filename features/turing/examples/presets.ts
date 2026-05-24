@@ -25,3 +25,30 @@ export const TM_ACCEPTS_ENDS_WITH_1: TuringMachine = {
   acceptingStateIds: ['tm_q1'],
   rejectingStateIds: ['tm_qr'],
 };
+
+/** MT 1 banda: acepta solo la cadena vacía (rechaza cualquier símbolo). */
+export const TM_ACCEPTS_EMPTY: TuringMachine = {
+  id: 'preset_tm_empty',
+  name: 'MT — solo ε',
+  tapeCount: 1,
+  inputAlphabet: ['a', 'b'],
+  tapeAlphabet: ['a', 'b', '_'],
+  blankSymbol: '_',
+  states: [
+    { id: 'tm_e_q0', name: 'q0', isInitial: true, isAccepting: true, position: { x: 120, y: 100 } },
+    { id: 'tm_e_qr', name: 'qr', isInitial: false, isAccepting: false, position: { x: 120, y: 220 } },
+  ],
+  transitions: [
+    { id: 'tm_e_t0', from: 'tm_e_q0', to: 'tm_e_q0', readSymbols: ['_'], writeSymbols: ['_'], moves: ['S'] },
+    { id: 'tm_e_t1', from: 'tm_e_q0', to: 'tm_e_qr', readSymbols: ['a'], writeSymbols: ['a'], moves: ['S'] },
+    { id: 'tm_e_t2', from: 'tm_e_q0', to: 'tm_e_qr', readSymbols: ['b'], writeSymbols: ['b'], moves: ['S'] },
+  ],
+  initialStateId: 'tm_e_q0',
+  acceptingStateIds: ['tm_e_q0'],
+  rejectingStateIds: ['tm_e_qr'],
+};
+
+export const TURING_PRESETS = [
+  { id: 'tm-ends-1', label: 'MT: termina en 1', machine: TM_ACCEPTS_ENDS_WITH_1 },
+  { id: 'tm-empty', label: 'MT: solo ε', machine: TM_ACCEPTS_EMPTY },
+] as const;

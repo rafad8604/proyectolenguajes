@@ -4,6 +4,7 @@ import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import { Navbar } from 'components/layout/navbar';
 import { Footer } from 'components/layout/footer';
+import { SkipLink } from 'components/layout/skip-link';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { cn } from 'lib/utils/cn';
@@ -47,9 +48,12 @@ export default function RootLayout({
       )}
     >
       <body className="antialiased min-h-screen">
+        <SkipLink />
         <div className="mx-auto max-w-6xl px-4 py-8 lg:px-8">
           <Navbar />
-          <main className="min-h-[60vh]">{children}</main>
+          <main id="contenido-principal" className="min-h-[60vh]">
+            {children}
+          </main>
           <Footer />
         </div>
         <Analytics />

@@ -5,6 +5,7 @@ export const baseUrl =
 export default function sitemap() {
   const routes = [
     '',
+    '/acerca',
     '/automatas',
     '/automatas/conversion',
     '/turing',

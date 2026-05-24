@@ -8,7 +8,8 @@ import { SimulationPanel } from './simulation-panel';
 import { serializeAutomatonToJflap } from 'lib/jflap';
 import { downloadTextFile } from 'lib/utils/download';
 import { cn } from 'lib/utils/cn';
-import { NFA_EPSILON } from '../examples/presets';
+import { PresetBar } from 'components/ui/preset-bar';
+import { NFA_EPSILON, NFA_ENDS_WITH_A } from '../examples/presets';
 
 export function NfaToDfaPanel() {
   const nfa = useAutomatonStore((s) => s.automaton);
@@ -41,8 +42,28 @@ export function NfaToDfaPanel() {
       .map((id) => nfa.states.find((s) => s.id === id)?.name ?? id)
       .join(', ');
 
+  const handleNfaPreset = (id: string) => {
+    const map = {
+      'nfa-epsilon': NFA_EPSILON,
+      'nfa-ends-a': NFA_ENDS_WITH_A,
+    } as const;
+    const preset = map[id as keyof typeof map];
+    if (preset) {
+      loadAutomaton(structuredClone(preset));
+      reset();
+    }
+  };
+
   return (
     <div className="space-y-6">
+      <PresetBar
+        label="Ejemplos AFND"
+        presets={[
+          { id: 'nfa-epsilon', label: 'AFND con ε' },
+          { id: 'nfa-ends-a', label: 'AFND termina en a' },
+        ]}
+        onSelect={handleNfaPreset}
+      />
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
@@ -51,16 +72,6 @@ export function NfaToDfaPanel() {
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
           Convertir AFND actual → AFD
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            loadAutomaton(structuredClone(NFA_EPSILON));
-            reset();
-          }}
-          className="rounded-md border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-600"
-        >
-          Cargar ejemplo AFND (ε)
         </button>
         <Link
           href="/automatas"

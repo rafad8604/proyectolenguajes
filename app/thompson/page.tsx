@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ModuleIntro } from 'components/content/ModuleIntro';
 import { ThompsonBuilder } from 'features/thompson/components/ThompsonBuilder';
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default function ThompsonPage() {
           algoritmo de Thompson, con simulación y exportación a JFLAP.
         </p>
       </header>
+      <ModuleIntro conceptId="thompson" className="mb-6" />
       <ThompsonBuilder />
     </section>
   );

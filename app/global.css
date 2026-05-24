@@ -19,11 +19,14 @@ html {
   text-wrap: balance;
 }
 
-/* Tablas de transiciones en módulos futuros */
-table {
-  display: block;
-  max-width: 100%;
+/* Tablas con desplazamiento horizontal en paneles */
+.overflow-table {
   overflow-x: auto;
+}
+
+.overflow-table table {
+  display: table;
+  width: 100%;
   white-space: nowrap;
 }
 
@@ -41,4 +44,27 @@ select {
   footer {
     display: none !important;
   }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only:focus {
+  position: fixed;
+  width: auto;
+  height: auto;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
 }

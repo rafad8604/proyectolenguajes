@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ModuleIntro } from 'components/content/ModuleIntro';
 import { PumpingLemmaWizard } from 'features/pumping-lemma/components/PumpingLemmaWizard';
 
 export const metadata: Metadata = {
@@ -18,6 +19,7 @@ export default function LemaBombeoPage() {
           división xyz, y genera las cadenas bombeadas xy^i z.
         </p>
       </header>
+      <ModuleIntro conceptId="pumping" className="mb-6" />
       <PumpingLemmaWizard />
     </section>
   );

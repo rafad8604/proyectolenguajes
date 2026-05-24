@@ -6,7 +6,8 @@ import { useTuringSimulationStore } from '../store/turing-simulation-store';
 import { getTuringOutcomeLabel } from 'lib/core/turing';
 import { TapeView } from './TapeView';
 import { cn } from 'lib/utils/cn';
-import { TM_ACCEPTS_ENDS_WITH_1 } from '../examples/presets';
+import { TURING_PRESETS } from '../examples/presets';
+import { PresetBar } from 'components/ui/preset-bar';
 
 export function TuringSimulationPanel() {
   const machine = useTuringStore((s) => s.machine);
@@ -67,8 +68,17 @@ export function TuringSimulationPanel() {
     trace !== null && currentStepIndex >= trace.steps.length - 1;
   const atStart = currentStepIndex <= 0;
 
+  const handlePreset = (id: string) => {
+    const preset = TURING_PRESETS.find((p) => p.id === id);
+    if (preset) loadMachine(structuredClone(preset.machine));
+  };
+
   return (
     <div className="space-y-4">
+      <PresetBar
+        presets={TURING_PRESETS.map((p) => ({ id: p.id, label: p.label }))}
+        onSelect={handlePreset}
+      />
       <div className="flex flex-wrap items-end gap-3">
         <div>
           <label className="text-sm font-medium">Cadena de entrada</label>
@@ -96,13 +106,6 @@ export function TuringSimulationPanel() {
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Simular
-        </button>
-        <button
-          type="button"
-          onClick={() => loadMachine(structuredClone(TM_ACCEPTS_ENDS_WITH_1))}
-          className="rounded-md border px-3 py-2 text-xs dark:border-neutral-600"
-        >
-          Ejemplo: termina en 1
         </button>
       </div>
 
