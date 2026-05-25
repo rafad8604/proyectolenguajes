@@ -9,8 +9,10 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import type { Automaton } from 'types/automaton';
+import type { TransitionVisual } from 'types/transition-visual';
 import {
   FlowDiagramChrome,
+  GraphEditProvider,
   sharedEdgeTypes,
   sharedNodeTypes,
 } from 'features/graph';
@@ -38,6 +40,10 @@ export interface AutomatonCanvasProps {
     stateId: string,
     position: { x: number; y: number }
   ) => void;
+  onTransitionVisualChange?: (
+    transitionId: string,
+    partial: Partial<TransitionVisual>
+  ) => void;
   highlight?: AutomatonGraphHighlight;
   /** Traza controlada (p. ej. Thompson dual); evita el store global. */
   trace?: SimulationTrace | null;
@@ -51,6 +57,7 @@ export function AutomatonCanvas({
   readOnly = false,
   layoutDraggable = false,
   onStatePositionChange,
+  onTransitionVisualChange,
   highlight: highlightProp,
   trace: traceProp,
   stepIndex: stepIndexProp,
@@ -59,6 +66,9 @@ export function AutomatonCanvas({
 }: AutomatonCanvasProps) {
   const storeAutomaton = useAutomatonStore((s) => s.automaton);
   const updateStatePosition = useAutomatonStore((s) => s.updateStatePosition);
+  const updateTransitionVisualStore = useAutomatonStore(
+    (s) => s.updateTransitionVisual
+  );
   const setPendingConnection = useAutomatonStore((s) => s.setPendingConnection);
   const selectState = useAutomatonStore((s) => s.selectState);
 
@@ -72,6 +82,22 @@ export function AutomatonCanvas({
   const automaton = automatonProp ?? storeAutomaton;
   const canDragLayout = layoutDraggable || !!onStatePositionChange;
   const isEditable = !readOnly && !automatonProp;
+  const edgeLayoutEditable = isEditable || canDragLayout;
+
+  const handleTransitionVisualChange = useCallback(
+    (transitionId: string, partial: Partial<TransitionVisual>) => {
+      if (onTransitionVisualChange) {
+        onTransitionVisualChange(transitionId, partial);
+      } else if (isEditable) {
+        updateTransitionVisualStore(transitionId, partial);
+      }
+    },
+    [
+      onTransitionVisualChange,
+      isEditable,
+      updateTransitionVisualStore,
+    ]
+  );
 
   const highlightFromSim = useMemo(() => {
     if (highlightProp !== undefined) return highlightProp;
@@ -142,30 +168,38 @@ export function AutomatonCanvas({
       role="img"
       aria-label={ariaLabel}
     >
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={sharedNodeTypes}
-        edgeTypes={sharedEdgeTypes}
-        nodesDraggable={isEditable || canDragLayout}
-        nodesConnectable={isEditable}
-        elementsSelectable={isEditable || canDragLayout}
-        onNodesChange={onNodesChange}
-        onConnect={onConnect}
-        onNodeClick={onNodeClick}
-        onPaneClick={() => {
-          if (isEditable) selectState(null);
-        }}
-        defaultEdgeOptions={{
-          type: 'directed',
-          markerEnd: defaultDirectedMarker,
-        }}
-        elevateEdgesOnSelect
-        fitView
-        proOptions={{ hideAttribution: true }}
+      <GraphEditProvider
+        edgeLayoutEditable={edgeLayoutEditable}
+        onTransitionVisualChange={
+          edgeLayoutEditable ? handleTransitionVisualChange : undefined
+        }
       >
-        <FlowDiagramChrome />
-      </ReactFlow>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={sharedNodeTypes}
+          edgeTypes={sharedEdgeTypes}
+          nodesDraggable={isEditable || canDragLayout}
+          nodesConnectable={isEditable}
+          elementsSelectable={edgeLayoutEditable}
+          edgesFocusable={edgeLayoutEditable}
+          onNodesChange={onNodesChange}
+          onConnect={onConnect}
+          onNodeClick={onNodeClick}
+          onPaneClick={() => {
+            if (isEditable) selectState(null);
+          }}
+          defaultEdgeOptions={{
+            type: 'directed',
+            markerEnd: defaultDirectedMarker,
+          }}
+          elevateEdgesOnSelect
+          fitView
+          proOptions={{ hideAttribution: true }}
+        >
+          <FlowDiagramChrome />
+        </ReactFlow>
+      </GraphEditProvider>
     </div>
   );
 }

@@ -56,6 +56,7 @@ export function automatonToEdges(
       id: t.id,
       from: t.from,
       to: t.to,
+      sortKey: t.isEpsilon ? EPSILON_SYMBOL : t.symbol,
     }))
   );
 
@@ -74,6 +75,8 @@ export function automatonToEdges(
       animated: t.isEpsilon || isActive,
       data: {
         label: t.isEpsilon ? EPSILON_SYMBOL : t.symbol,
+        transitionId: t.id,
+        visual: t.visual,
         isEpsilon: t.isEpsilon,
         isActive,
         isVisited,

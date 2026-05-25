@@ -1,6 +1,7 @@
 import type { Automaton } from 'types/automaton';
 import type { TuringMachine } from 'types/turing';
 import { escapeXml, sanitizeFilename } from './xml-utils';
+import { transitionVisualToJffXml } from './transition-visual-jff';
 import type { JffExportTarget } from './types';
 
 function buildStateIdMap(states: { id: string }[]): Map<string, number> {
@@ -34,10 +35,11 @@ export function exportAutomatonToJff(automaton: Automaton): string {
       const from = stateIdMap.get(t.from) ?? 0;
       const to = stateIdMap.get(t.to) ?? 0;
       const read = t.isEpsilon ? '' : escapeXml(t.symbol);
+      const visualXml = transitionVisualToJffXml(t.visual);
       return `    <transition>
       <from>${from}</from>
       <to>${to}</to>
-      <read>${read}</read>
+      <read>${read}</read>${visualXml}
     </transition>`;
     })
     .join('\n');
@@ -84,12 +86,13 @@ export function exportTuringToJff(machine: TuringMachine): string {
         .map((s) => `      <write>${escapeXml(s)}</write>`)
         .join('\n');
       const moves = t.moves.map((m) => `      <move>${m}</move>`).join('\n');
+      const visualXml = transitionVisualToJffXml(t.visual);
       return `    <transition>
       <from>${from}</from>
       <to>${to}</to>
 ${reads}
 ${writes}
-${moves}
+${moves}${visualXml}
     </transition>`;
     })
     .join('\n');

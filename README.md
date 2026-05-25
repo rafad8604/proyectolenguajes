@@ -80,8 +80,8 @@ types/         # Modelos TypeScript
 - **Sin persistencia**: al recargar la página se pierde el trabajo no exportado.
 - **Gramáticas**: la clasificación de Chomsky es por *forma* de las producciones, no decide la clase del lenguaje en todos los casos.
 - **Lema de bombeo**: no verifica automáticamente si xy^i z ∈ L; esa conclusión es manual.
-- **JFLAP**: soporte principal para autómatas finitos y Turing de 1 banda; 2 bandas según el archivo importado.
-- **Turing**: editor por tabla (no lienzo gráfico de estados).
+- **JFLAP**: soporte principal para autómatas finitos y Turing de 1 banda; 2 bandas según el archivo importado. Las posiciones de **estados** se exportan en formato estándar; la curvatura de **transiciones** y la posición de **etiquetas** se conservan al reimportar en esta app mediante la extensión `pl:visual` (JFLAP oficial puede no mostrarlas).
+- **Turing**: editor con diagrama gráfico y tabla de transiciones.
 - **Rendimiento**: autómatas o tablas de conversión muy grandes pueden volverse lentos.
 
 ## Stack

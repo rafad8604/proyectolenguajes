@@ -1,8 +1,11 @@
 import { MarkerType, type EdgeMarker } from '@xyflow/react';
 import type { CSSProperties } from 'react';
+import type { TransitionVisual } from 'types/transition-visual';
 
 export interface GraphEdgeData extends Record<string, unknown> {
   label?: string;
+  transitionId?: string;
+  visual?: TransitionVisual;
   isActive?: boolean;
   isVisited?: boolean;
   isEpsilon?: boolean;

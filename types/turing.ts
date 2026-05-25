@@ -1,4 +1,5 @@
 import type { State } from './state';
+import type { TransitionVisual } from './transition-visual';
 
 /** Dirección de movimiento del cabezal en una cinta. */
 export type TapeMove = 'L' | 'R' | 'S';
@@ -14,6 +15,8 @@ export interface TuringTransition {
   writeSymbols: string[];
   /** Movimientos del cabezal, uno por banda. */
   moves: TapeMove[];
+  /** Posición/curvatura de la flecha y etiqueta (solo visual). */
+  visual?: TransitionVisual;
 }
 
 /** Máquina de Turing de una o dos bandas. */

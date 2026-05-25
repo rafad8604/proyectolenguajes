@@ -10,6 +10,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import {
   FlowDiagramChrome,
+  GraphEditProvider,
   sharedEdgeTypes,
   sharedNodeTypes,
 } from 'features/graph';
@@ -21,6 +22,7 @@ import { turingToEdges, turingToNodes } from '../adapters/react-flow';
 export function TuringCanvas() {
   const machine = useTuringStore((s) => s.machine);
   const updateStatePosition = useTuringStore((s) => s.updateStatePosition);
+  const updateTransitionVisual = useTuringStore((s) => s.updateTransitionVisual);
   const setPendingConnection = useTuringStore((s) => s.setPendingConnection);
   const selectState = useTuringStore((s) => s.selectState);
 
@@ -88,28 +90,34 @@ export function TuringCanvas() {
       role="img"
       aria-label="Diagrama de la máquina de Turing"
     >
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={sharedNodeTypes}
-        edgeTypes={sharedEdgeTypes}
-        nodesDraggable
-        nodesConnectable
-        elementsSelectable
-        onNodesChange={onNodesChange}
-        onConnect={onConnect}
-        onNodeClick={onNodeClick}
-        onPaneClick={() => selectState(null)}
-        defaultEdgeOptions={{
-          type: 'directed',
-          markerEnd: defaultDirectedMarker,
-        }}
-        elevateEdgesOnSelect
-        fitView
-        proOptions={{ hideAttribution: true }}
+      <GraphEditProvider
+        edgeLayoutEditable
+        onTransitionVisualChange={updateTransitionVisual}
       >
-        <FlowDiagramChrome />
-      </ReactFlow>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={sharedNodeTypes}
+          edgeTypes={sharedEdgeTypes}
+          nodesDraggable
+          nodesConnectable
+          elementsSelectable
+          edgesFocusable
+          onNodesChange={onNodesChange}
+          onConnect={onConnect}
+          onNodeClick={onNodeClick}
+          onPaneClick={() => selectState(null)}
+          defaultEdgeOptions={{
+            type: 'directed',
+            markerEnd: defaultDirectedMarker,
+          }}
+          elevateEdgesOnSelect
+          fitView
+          proOptions={{ hideAttribution: true }}
+        >
+          <FlowDiagramChrome />
+        </ReactFlow>
+      </GraphEditProvider>
     </div>
   );
 }

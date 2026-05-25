@@ -3,6 +3,7 @@ export {
   createTuringState,
   createTuringTransition,
 } from './factory';
+export { patchTuringTransitionVisual } from './layout';
 export {
   buildTuringSimulationTrace,
   getTuringOutcomeLabel,

@@ -7,7 +7,12 @@ import {
   validateThompsonNfa,
   hasThompsonValidationErrors,
 } from 'lib/core/thompson/validate-thompson-nfa';
-import { convertNfaToDfa, patchStatePosition } from 'lib/core/automata';
+import {
+  convertNfaToDfa,
+  patchStatePosition,
+  patchTransitionVisual,
+} from 'lib/core/automata';
+import type { TransitionVisual } from 'types/transition-visual';
 import { exportAutomatonToJff } from 'lib/jflap';
 import { downloadTextFile } from 'lib/utils/download';
 import { AutomatonCanvas } from 'features/automata/components/automaton-canvas';
@@ -161,6 +166,24 @@ export function ThompsonBuilder() {
     (stateId: string, position: { x: number; y: number }) => {
       setDisplayDfa((prev) =>
         prev ? patchStatePosition(prev, stateId, position) : prev
+      );
+    },
+    []
+  );
+
+  const handleNfaTransitionVisualChange = useCallback(
+    (transitionId: string, partial: Partial<TransitionVisual>) => {
+      setDisplayNfa((prev) =>
+        prev ? patchTransitionVisual(prev, transitionId, partial) : prev
+      );
+    },
+    []
+  );
+
+  const handleDfaTransitionVisualChange = useCallback(
+    (transitionId: string, partial: Partial<TransitionVisual>) => {
+      setDisplayDfa((prev) =>
+        prev ? patchTransitionVisual(prev, transitionId, partial) : prev
       );
     },
     []
@@ -324,6 +347,7 @@ export function ThompsonBuilder() {
                   readOnly
                   layoutDraggable
                   onStatePositionChange={handleNfaPositionChange}
+                  onTransitionVisualChange={handleNfaTransitionVisualChange}
                   className="h-[360px]"
                   ariaLabel="AFND generado por Thompson"
                 />
@@ -367,6 +391,7 @@ export function ThompsonBuilder() {
                     readOnly
                     layoutDraggable
                     onStatePositionChange={handleDfaPositionChange}
+                    onTransitionVisualChange={handleDfaTransitionVisualChange}
                     className="h-[320px]"
                     ariaLabel="AFD equivalente por subconjuntos"
                   />
@@ -380,12 +405,15 @@ export function ThompsonBuilder() {
                   defaultInput={defaultSimInput}
                   onNfaPositionChange={handleNfaPositionChange}
                   onDfaPositionChange={handleDfaPositionChange}
+                  onNfaTransitionVisualChange={handleNfaTransitionVisualChange}
+                  onDfaTransitionVisualChange={handleDfaTransitionVisualChange}
                 />
               ) : (
                 <ThompsonNfaSimulation
                   nfa={nfa}
                   defaultInput={defaultSimInput}
                   onStatePositionChange={handleNfaPositionChange}
+                  onTransitionVisualChange={handleNfaTransitionVisualChange}
                 />
               )}
             </>

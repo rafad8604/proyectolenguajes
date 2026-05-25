@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { Automaton } from 'types/automaton';
+import type { TransitionVisual } from 'types/transition-visual';
 import {
   compareSimulations,
   formatVisitedStates,
@@ -25,6 +26,14 @@ interface ThompsonComparisonPanelProps {
     stateId: string,
     position: { x: number; y: number }
   ) => void;
+  onNfaTransitionVisualChange?: (
+    transitionId: string,
+    partial: Partial<TransitionVisual>
+  ) => void;
+  onDfaTransitionVisualChange?: (
+    transitionId: string,
+    partial: Partial<TransitionVisual>
+  ) => void;
 }
 
 export function ThompsonComparisonPanel({
@@ -33,6 +42,8 @@ export function ThompsonComparisonPanel({
   defaultInput = 'aab',
   onNfaPositionChange,
   onDfaPositionChange,
+  onNfaTransitionVisualChange,
+  onDfaTransitionVisualChange,
 }: ThompsonComparisonPanelProps) {
   const [open, setOpen] = useState(true);
   const [input, setInput] = useState(defaultInput);
@@ -252,6 +263,7 @@ export function ThompsonComparisonPanel({
                 readOnly
                 layoutDraggable
                 onStatePositionChange={onNfaPositionChange}
+                onTransitionVisualChange={onNfaTransitionVisualChange}
                 trace={nfaTrace}
                 stepIndex={stepIndex}
                 className="h-[280px]"
@@ -270,6 +282,7 @@ export function ThompsonComparisonPanel({
                 readOnly
                 layoutDraggable
                 onStatePositionChange={onDfaPositionChange}
+                onTransitionVisualChange={onDfaTransitionVisualChange}
                 trace={dfaTrace}
                 stepIndex={stepIndex}
                 className="h-[280px]"

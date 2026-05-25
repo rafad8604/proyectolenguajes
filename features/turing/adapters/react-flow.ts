@@ -37,23 +37,24 @@ export function turingToEdges(
   highlight?: TuringGraphHighlight
 ): Edge<GraphEdgeData>[] {
   const activeTransitions = new Set(highlight?.activeTransitionIds ?? []);
+  const transitionsWithLabel = machine.transitions.map((t) => ({
+    t,
+    label: formatTransitionLabel(t, machine.tapeCount, machine.blankSymbol),
+  }));
+
   const offsets = assignParallelEdgeOffsets(
-    machine.transitions.map((t) => ({
+    transitionsWithLabel.map(({ t, label }) => ({
       id: t.id,
       from: t.from,
       to: t.to,
+      sortKey: label,
     }))
   );
 
-  return machine.transitions.map((t) => {
+  return transitionsWithLabel.map(({ t, label }) => {
     const isActive = activeTransitions.has(t.id);
     const meta = offsets.get(t.id);
     const isSelfLoop = t.from === t.to;
-    const label = formatTransitionLabel(
-      t,
-      machine.tapeCount,
-      machine.blankSymbol
-    );
 
     return {
       id: t.id,
@@ -64,6 +65,8 @@ export function turingToEdges(
       animated: isActive,
       data: {
         label,
+        transitionId: t.id,
+        visual: t.visual,
         isActive,
         offsetIndex: meta?.offsetIndex ?? 0,
         totalSiblings: meta?.totalSiblings ?? 1,

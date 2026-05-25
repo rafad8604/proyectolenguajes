@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { Automaton, AutomatonType } from 'types/automaton';
 import type { Transition } from 'types/transition';
+import type { TransitionVisual } from 'types/transition-visual';
+import { mergeTransitionVisual } from 'types/transition-visual';
 import {
   createEmptyAutomaton,
   createState,
@@ -30,6 +32,10 @@ interface AutomatonStore {
   updateTransition: (
     transitionId: string,
     updates: Partial<Pick<Transition, 'from' | 'to' | 'symbol' | 'isEpsilon'>>
+  ) => void;
+  updateTransitionVisual: (
+    transitionId: string,
+    partial: Partial<TransitionVisual>
   ) => void;
   removeTransition: (transitionId: string) => void;
   setPendingConnection: (from: string, to: string) => void;
@@ -207,6 +213,18 @@ export const useAutomatonStore = create<AutomatonStore>((set, get) => ({
         automaton: applyAlphabet({ ...s.automaton, transitions }),
       };
     }),
+
+  updateTransitionVisual: (transitionId, partial) =>
+    set((s) => ({
+      automaton: {
+        ...s.automaton,
+        transitions: s.automaton.transitions.map((t) =>
+          t.id === transitionId
+            ? { ...t, visual: mergeTransitionVisual(t.visual, partial) }
+            : t
+        ),
+      },
+    })),
 
   removeTransition: (transitionId) =>
     set((s) => ({

@@ -4,6 +4,7 @@ import type { State } from 'types/state';
 import type { Transition } from 'types/transition';
 import type { TuringMachine, TuringTransition, TapeMove } from 'types/turing';
 import { generateId } from 'lib/core/automata/factory';
+import { parseTransitionVisualFromJff } from './transition-visual-jff';
 import type {
   JffDocumentType,
   JffParseResult,
@@ -134,14 +135,20 @@ function parseFaTransitions(
       continue;
     }
 
+    const visual = parseTransitionVisualFromJff(obj);
+    let visualAttached = false;
+
     for (const read of reads) {
       const isEpsilon = read === '' || read === 'ε' || read === 'epsilon';
+      const attachVisual = visual && !visualAttached;
+      if (attachVisual) visualAttached = true;
       transitions.push({
         id: generateId('jflap_t'),
         from,
         to,
         symbol: isEpsilon ? '' : read,
         isEpsilon,
+        ...(attachVisual ? { visual } : {}),
       });
     }
   }
@@ -307,6 +314,8 @@ function parseTuringMachine(
       return m ?? 'S';
     });
 
+    const visual = parseTransitionVisualFromJff(obj);
+
     transitions.push({
       id: generateId('jflap_tm'),
       from,
@@ -314,6 +323,7 @@ function parseTuringMachine(
       readSymbols,
       writeSymbols,
       moves,
+      ...(visual ? { visual } : {}),
     });
   }
 

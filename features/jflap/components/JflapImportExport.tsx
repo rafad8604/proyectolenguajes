@@ -169,6 +169,12 @@ export function JflapImportExport({
         Formatos soportados: AFD, AFND (con ε), máquina de Turing (1 banda; 2 bandas
         si el .jff incluye múltiples read/write/move por transición).
       </p>
+      <p className="text-xs text-neutral-500">
+        Posiciones de estados se conservan en JFLAP estándar. Curvatura de flechas y
+        posición de etiquetas se guardan en extensión <code className="font-mono">pl:visual</code>{' '}
+        (y opcionalmente en <code className="font-mono">&lt;control&gt;</code>); JFLAP
+        oficial puede ignorar esa geometría al abrir el archivo.
+      </p>
 
       {error && (
         <p className="text-sm text-red-600 dark:text-red-400">{error}</p>

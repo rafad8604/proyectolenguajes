@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { TuringMachine } from 'types/turing';
 import type { TuringTransition, TapeMove } from 'types/turing';
+import type { TransitionVisual } from 'types/transition-visual';
+import { mergeTransitionVisual } from 'types/transition-visual';
 import {
   createEmptyTuringMachine,
   createTuringState,
@@ -28,6 +30,10 @@ interface TuringStore {
   updateTransition: (
     id: string,
     updates: Partial<Omit<TuringTransition, 'id'>>
+  ) => void;
+  updateTransitionVisual: (
+    id: string,
+    partial: Partial<TransitionVisual>
   ) => void;
   removeTransition: (id: string) => void;
   setPendingConnection: (from: string, to: string) => void;
@@ -196,6 +202,18 @@ export const useTuringStore = create<TuringStore>((set) => ({
         ...s.machine,
         transitions: s.machine.transitions.map((t) =>
           t.id === id ? { ...t, ...updates } : t
+        ),
+      },
+    })),
+
+  updateTransitionVisual: (id, partial) =>
+    set((s) => ({
+      machine: {
+        ...s.machine,
+        transitions: s.machine.transitions.map((t) =>
+          t.id === id
+            ? { ...t, visual: mergeTransitionVisual(t.visual, partial) }
+            : t
         ),
       },
     })),
