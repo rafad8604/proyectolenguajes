@@ -1,9 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { buildNfaFromRegex } from 'lib/core/thompson/build-nfa';
-import { convertNfaToDfa } from 'lib/core/automata';
+import { convertNfaToDfa, patchStatePosition } from 'lib/core/automata';
 import { exportAutomatonToJff } from 'lib/jflap';
 import { downloadTextFile } from 'lib/utils/download';
 import { AutomatonCanvas } from 'features/automata/components/automaton-canvas';
@@ -60,17 +60,41 @@ export function ThompsonBuilder() {
     null
   );
   const [stepIndex, setStepIndex] = useState(0);
-  const [dfa, setDfa] = useState<Automaton | null>(null);
+  const [displayNfa, setDisplayNfa] = useState<Automaton | null>(null);
+  const [displayDfa, setDisplayDfa] = useState<Automaton | null>(null);
 
   const handleBuild = () => {
     const built = buildNfaFromRegex(regex);
     setResult(built);
     setStepIndex(0);
-    setDfa(null);
+    setDisplayDfa(null);
+    if (built.automaton && !built.error) {
+      setDisplayNfa(structuredClone(built.automaton));
+    } else {
+      setDisplayNfa(null);
+    }
   };
 
-  const nfa = result?.automaton ?? null;
+  const nfa = displayNfa;
   const currentStep = result?.steps[stepIndex];
+
+  const handleNfaPositionChange = useCallback(
+    (stateId: string, position: { x: number; y: number }) => {
+      setDisplayNfa((prev) =>
+        prev ? patchStatePosition(prev, stateId, position) : prev
+      );
+    },
+    []
+  );
+
+  const handleDfaPositionChange = useCallback(
+    (stateId: string, position: { x: number; y: number }) => {
+      setDisplayDfa((prev) =>
+        prev ? patchStatePosition(prev, stateId, position) : prev
+      );
+    },
+    []
+  );
 
   const tokenDisplay = useMemo(
     () =>
@@ -90,7 +114,7 @@ export function ThompsonBuilder() {
     if (!nfa) return;
     const conversion = convertNfaToDfa(nfa);
     if (!conversion.error) {
-      setDfa(conversion.dfa);
+      setDisplayDfa(structuredClone(conversion.dfa));
     }
   };
 
@@ -211,7 +235,14 @@ export function ThompsonBuilder() {
             <>
               <section>
                 <h3 className="mb-2 text-sm font-semibold">AFND resultante</h3>
-                <AutomatonCanvas automaton={nfa} readOnly className="h-[360px]" />
+                <AutomatonCanvas
+                  automaton={nfa}
+                  readOnly
+                  layoutDraggable
+                  onStatePositionChange={handleNfaPositionChange}
+                  className="h-[360px]"
+                  ariaLabel="AFND generado por Thompson"
+                />
               </section>
 
               <section className="rounded-lg border p-4 dark:border-neutral-700">
@@ -242,10 +273,17 @@ export function ThompsonBuilder() {
                 </Link>
               </div>
 
-              {dfa && (
+              {displayDfa && (
                 <section>
                   <h3 className="mb-2 text-sm font-semibold">AFD equivalente</h3>
-                  <AutomatonCanvas automaton={dfa} readOnly className="h-[320px]" />
+                  <AutomatonCanvas
+                    automaton={displayDfa}
+                    readOnly
+                    layoutDraggable
+                    onStatePositionChange={handleDfaPositionChange}
+                    className="h-[320px]"
+                    ariaLabel="AFD equivalente por subconjuntos"
+                  />
                 </section>
               )}
 

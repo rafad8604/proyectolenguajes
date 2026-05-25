@@ -10,6 +10,7 @@ import {
 interface TuringStore {
   machine: TuringMachine;
   selectedStateId: string | null;
+  pendingConnection: { from: string; to: string } | null;
 
   setTapeCount: (count: 1 | 2) => void;
   setName: (name: string) => void;
@@ -22,12 +23,15 @@ interface TuringStore {
   setInitialState: (stateId: string) => void;
   toggleAcceptingState: (stateId: string) => void;
   toggleRejectingState: (stateId: string) => void;
+  updateStatePosition: (stateId: string, x: number, y: number) => void;
   addTransition: (transition: Omit<TuringTransition, 'id'>) => void;
   updateTransition: (
     id: string,
     updates: Partial<Omit<TuringTransition, 'id'>>
   ) => void;
   removeTransition: (id: string) => void;
+  setPendingConnection: (from: string, to: string) => void;
+  clearPendingConnection: () => void;
   loadMachine: (machine: TuringMachine) => void;
   selectState: (id: string | null) => void;
   reset: () => void;
@@ -36,6 +40,7 @@ interface TuringStore {
 export const useTuringStore = create<TuringStore>((set) => ({
   machine: createEmptyTuringMachine(1),
   selectedStateId: null,
+  pendingConnection: null,
 
   setTapeCount: (count) =>
     set((s) => ({
@@ -157,6 +162,16 @@ export const useTuringStore = create<TuringStore>((set) => ({
       };
     }),
 
+  updateStatePosition: (stateId, x, y) =>
+    set((s) => ({
+      machine: {
+        ...s.machine,
+        states: s.machine.states.map((st) =>
+          st.id === stateId ? { ...st, position: { x, y } } : st
+        ),
+      },
+    })),
+
   addTransition: (partial) =>
     set((s) => {
       const t = createTuringTransition(
@@ -193,10 +208,16 @@ export const useTuringStore = create<TuringStore>((set) => ({
       },
     })),
 
+  setPendingConnection: (from, to) =>
+    set({ pendingConnection: { from, to } }),
+
+  clearPendingConnection: () => set({ pendingConnection: null }),
+
   loadMachine: (machine) =>
     set({
       machine: structuredClone(machine),
       selectedStateId: null,
+      pendingConnection: null,
     }),
 
   selectState: (id) => set({ selectedStateId: id }),
@@ -205,5 +226,6 @@ export const useTuringStore = create<TuringStore>((set) => ({
     set({
       machine: createEmptyTuringMachine(1),
       selectedStateId: null,
+      pendingConnection: null,
     }),
 }));

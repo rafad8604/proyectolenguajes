@@ -12,6 +12,8 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import type { Automaton } from 'types/automaton';
+import { sharedEdgeTypes, sharedNodeTypes } from 'features/graph';
+import { defaultDirectedMarker } from 'features/graph/edges/edge-types';
 import { useAutomatonStore } from '../store/automaton-store';
 import { useSimulationStore } from '../store/simulation-store';
 import {
@@ -19,23 +21,30 @@ import {
   automatonToNodes,
   type AutomatonGraphHighlight,
 } from '../adapters/react-flow';
-import { StateNode } from './state-node';
-
-const nodeTypes = { stateNode: StateNode };
 
 export interface AutomatonCanvasProps {
   /** Si se omite, usa el autómata del store global. */
   automaton?: Automaton;
   readOnly?: boolean;
+  /** Permite arrastrar nodos para reordenar el layout sin editar transiciones. */
+  layoutDraggable?: boolean;
+  onStatePositionChange?: (
+    stateId: string,
+    position: { x: number; y: number }
+  ) => void;
   highlight?: AutomatonGraphHighlight;
   className?: string;
+  ariaLabel?: string;
 }
 
 export function AutomatonCanvas({
   automaton: automatonProp,
   readOnly = false,
+  layoutDraggable = false,
+  onStatePositionChange,
   highlight: highlightProp,
-  className = 'h-[420px]',
+  className = 'h-[min(420px,50vh)] min-h-[320px]',
+  ariaLabel = 'Diagrama del autómata finito',
 }: AutomatonCanvasProps) {
   const storeAutomaton = useAutomatonStore((s) => s.automaton);
   const updateStatePosition = useAutomatonStore((s) => s.updateStatePosition);
@@ -46,10 +55,12 @@ export function AutomatonCanvas({
   const currentStepIndex = useSimulationStore((s) => s.currentStepIndex);
 
   const automaton = automatonProp ?? storeAutomaton;
+  const canDragLayout = layoutDraggable || !!onStatePositionChange;
+  const isEditable = !readOnly && !automatonProp;
 
   const highlightFromSim = useMemo(() => {
     if (highlightProp !== undefined) return highlightProp;
-    if (automatonProp) return highlightProp;
+    if (automatonProp && !highlightProp) return highlightProp;
     const step = trace?.steps[currentStepIndex];
     if (!step) return undefined;
     return {
@@ -69,55 +80,76 @@ export function AutomatonCanvas({
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => {
-      if (readOnly || automatonProp) return;
+      const persistLayout = canDragLayout || isEditable;
+      if (!persistLayout) return;
+
       for (const change of changes) {
         if (
           change.type === 'position' &&
           change.position &&
           change.dragging === false
         ) {
-          updateStatePosition(change.id, change.position.x, change.position.y);
+          if (onStatePositionChange) {
+            onStatePositionChange(change.id, {
+              x: change.position.x,
+              y: change.position.y,
+            });
+          } else if (isEditable) {
+            updateStatePosition(
+              change.id,
+              change.position.x,
+              change.position.y
+            );
+          }
         }
       }
     },
-    [readOnly, automatonProp, updateStatePosition]
+    [canDragLayout, isEditable, onStatePositionChange, updateStatePosition]
   );
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      if (readOnly || automatonProp) return;
+      if (!isEditable) return;
       if (connection.source && connection.target) {
         setPendingConnection(connection.source, connection.target);
       }
     },
-    [readOnly, automatonProp, setPendingConnection]
+    [isEditable, setPendingConnection]
   );
 
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
-      if (readOnly || automatonProp) return;
+      if (!isEditable) return;
       selectState(node.id);
     },
-    [readOnly, automatonProp, selectState]
+    [isEditable, selectState]
   );
 
   return (
     <div
       className={`${className} w-full rounded-lg border border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900/50`}
+      role="img"
+      aria-label={ariaLabel}
     >
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        nodeTypes={nodeTypes}
-        nodesDraggable={!readOnly}
-        nodesConnectable={!readOnly}
-        elementsSelectable={!readOnly}
+        nodeTypes={sharedNodeTypes}
+        edgeTypes={sharedEdgeTypes}
+        nodesDraggable={isEditable || canDragLayout}
+        nodesConnectable={isEditable}
+        elementsSelectable={isEditable || canDragLayout}
         onNodesChange={onNodesChange}
         onConnect={onConnect}
         onNodeClick={onNodeClick}
         onPaneClick={() => {
-          if (!readOnly && !automatonProp) selectState(null);
+          if (isEditable) selectState(null);
         }}
+        defaultEdgeOptions={{
+          type: 'directed',
+          markerEnd: defaultDirectedMarker,
+        }}
+        elevateEdgesOnSelect
         fitView
         proOptions={{ hideAttribution: true }}
       >

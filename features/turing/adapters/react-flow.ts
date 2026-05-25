@@ -1,23 +1,23 @@
 import type { Edge, Node } from '@xyflow/react';
-import type { Automaton } from 'types/automaton';
-import { EPSILON_SYMBOL } from 'lib/core/automata';
+import type { TuringMachine } from 'types/turing';
+import { formatTransitionLabel } from 'lib/core/turing/formatTransitionLabel';
 import { assignParallelEdgeOffsets } from 'features/graph/utils/parallel-edge-offset';
 import type { GraphEdgeData } from 'features/graph/edges/edge-types';
 import type { GraphStateNodeData } from 'features/graph/nodes/graph-state-node';
 
-export type { GraphStateNodeData as StateNodeData };
-
-export interface AutomatonGraphHighlight {
+export interface TuringGraphHighlight {
   activeStateIds?: string[];
   activeTransitionIds?: string[];
 }
 
-export function automatonToNodes(
-  automaton: Automaton,
-  highlight?: AutomatonGraphHighlight
+export function turingToNodes(
+  machine: TuringMachine,
+  highlight?: TuringGraphHighlight
 ): Node<GraphStateNodeData>[] {
   const active = new Set(highlight?.activeStateIds ?? []);
-  return automaton.states.map((state) => ({
+  const rejecting = new Set(machine.rejectingStateIds);
+
+  return machine.states.map((state) => ({
     id: state.id,
     type: 'stateNode',
     position: state.position ?? { x: 0, y: 0 },
@@ -26,53 +26,48 @@ export function automatonToNodes(
       stateId: state.id,
       isInitial: state.isInitial,
       isAccepting: state.isAccepting,
+      isRejecting: rejecting.has(state.id),
       isActive: active.has(state.id),
     },
   }));
 }
 
-export function automatonToEdges(
-  automaton: Automaton,
-  highlight?: AutomatonGraphHighlight
+export function turingToEdges(
+  machine: TuringMachine,
+  highlight?: TuringGraphHighlight
 ): Edge<GraphEdgeData>[] {
   const activeTransitions = new Set(highlight?.activeTransitionIds ?? []);
   const offsets = assignParallelEdgeOffsets(
-    automaton.transitions.map((t) => ({
+    machine.transitions.map((t) => ({
       id: t.id,
       from: t.from,
       to: t.to,
     }))
   );
 
-  return automaton.transitions.map((t) => {
+  return machine.transitions.map((t) => {
     const isActive = activeTransitions.has(t.id);
     const meta = offsets.get(t.id);
     const isSelfLoop = t.from === t.to;
+    const label = formatTransitionLabel(
+      t,
+      machine.tapeCount,
+      machine.blankSymbol
+    );
 
     return {
       id: t.id,
       source: t.from,
       target: t.to,
       type: isSelfLoop ? 'selfLoop' : 'directed',
-      label: t.isEpsilon ? EPSILON_SYMBOL : t.symbol,
-      animated: t.isEpsilon || isActive,
+      label,
+      animated: isActive,
       data: {
-        label: t.isEpsilon ? EPSILON_SYMBOL : t.symbol,
-        isEpsilon: t.isEpsilon,
+        label,
         isActive,
         offsetIndex: meta?.offsetIndex ?? 0,
         totalSiblings: meta?.totalSiblings ?? 1,
       },
     };
   });
-}
-
-export function extractPositionUpdates(
-  nodes: Node[]
-): { stateId: string; x: number; y: number }[] {
-  return nodes.map((node) => ({
-    stateId: node.id,
-    x: node.position.x,
-    y: node.position.y,
-  }));
 }

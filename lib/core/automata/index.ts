@@ -7,6 +7,7 @@ export {
   generateId,
   nextStateName,
 } from './factory';
+export { patchStatePosition } from './layout';
 export { deriveAlphabet, syncAlphabet } from './alphabet';
 export { buildFormalDefinition } from './formal';
 export {

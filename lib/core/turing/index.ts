@@ -8,6 +8,7 @@ export {
   getTuringOutcomeLabel,
   getVisibleTapeRange,
 } from './simulator';
+export { formatTransitionLabel } from './formatTransitionLabel';
 export type {
   TapeSnapshot,
   TuringConfiguration,

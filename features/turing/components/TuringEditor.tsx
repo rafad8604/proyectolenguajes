@@ -4,6 +4,8 @@ import { useTuringStore } from '../store/turing-store';
 import { TuringStatePanel } from './TuringStatePanel';
 import { TuringTransitionTable } from './TuringTransitionTable';
 import { TuringSimulationPanel } from './TuringSimulationPanel';
+import { TuringCanvas } from './TuringCanvas';
+import { TuringTransitionForm } from './TuringTransitionForm';
 import { JflapImportExport } from 'features/jflap/components/JflapImportExport';
 
 function parseSymbolList(value: string): string[] {
@@ -93,15 +95,26 @@ export function TuringEditor() {
         </div>
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
         <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-          <h2 className="mb-3 text-sm font-semibold">Estados</h2>
-          <TuringStatePanel />
+          <h2 className="mb-3 text-sm font-semibold">Diagrama</h2>
+          <TuringCanvas />
         </section>
-        <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
-          <TuringTransitionTable />
-        </section>
+        <aside className="space-y-4">
+          <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+            <h2 className="mb-3 text-sm font-semibold">Estados</h2>
+            <TuringStatePanel />
+          </section>
+          <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+            <TuringTransitionForm />
+          </section>
+        </aside>
       </div>
+
+      <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+        <h2 className="mb-3 text-sm font-semibold">Tabla de transiciones δ</h2>
+        <TuringTransitionTable />
+      </section>
 
       <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
         <h2 className="mb-3 text-sm font-semibold">Simulación</h2>
