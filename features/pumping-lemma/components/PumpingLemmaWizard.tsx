@@ -5,19 +5,40 @@ import {
   analyzePumpingLemma,
   parsePumpIndices,
 } from 'lib/core/pumping/buildPumpedString';
+import { validateLanguageNotation } from 'lib/core/pumping/language-notation';
 import { downloadTextFile } from 'lib/utils/download';
 import { cn } from 'lib/utils/cn';
 
 const EXAMPLES = [
   {
-    label: 'a^n b^n (clásico)',
-    language: 'L = { a^n b^n | n ≥ 0 }',
+    label: 'a^n b^n (n >= 0)',
+    language: 'L = { a^n b^n | n >= 0 }',
     p: 3,
     w: 'aaabbb',
     x: 'aa',
     y: 'a',
     z: 'bbb',
     indices: '0, 1, 2, 3',
+  },
+  {
+    label: 'a^n b^m (n >= m)',
+    language: 'L = { a^n b^m | n >= m }',
+    p: 4,
+    w: 'aaaab',
+    x: 'aaa',
+    y: 'a',
+    z: 'b',
+    indices: '0, 1, 2, 3',
+  },
+  {
+    label: 'ww (|w| >= 1)',
+    language: 'L = { ww | |w| >= 1 }',
+    p: 2,
+    w: 'ab',
+    x: 'a',
+    y: 'b',
+    z: '',
+    indices: '0, 1, 2',
   },
   {
     label: 'Palíndromos sobre {a,b}',
@@ -44,6 +65,11 @@ export function PumpingLemmaWizard() {
   const p = Number(pText);
   const pValid = Number.isInteger(p) && p > 0;
 
+  const languageValidation = useMemo(
+    () => validateLanguageNotation(language),
+    [language]
+  );
+
   const { indices, error: indicesError } = useMemo(
     () => parsePumpIndices(indicesText),
     [indicesText]
@@ -52,7 +78,7 @@ export function PumpingLemmaWizard() {
   const result = useMemo(() => {
     if (!pValid || indicesError) return null;
     return analyzePumpingLemma({
-      languageDescription: language,
+      languageDescription: languageValidation.normalized || language,
       pumpingLength: p,
       w,
       x,
@@ -60,11 +86,25 @@ export function PumpingLemmaWizard() {
       z,
       pumpIndices: indices,
     });
-  }, [language, p, pValid, w, x, y, z, indices, indicesError]);
+  }, [
+    language,
+    languageValidation.normalized,
+    p,
+    pValid,
+    w,
+    x,
+    y,
+    z,
+    indices,
+    indicesError,
+  ]);
 
   const displayError = !pValid
     ? 'p debe ser un entero positivo.'
-    : indicesError ?? null;
+    : languageValidation.error ??
+      (indicesError
+        ? `Índices de bombeo: ${indicesError}`
+        : null);
 
   const loadExample = (ex: (typeof EXAMPLES)[0]) => {
     setLanguage(ex.language);
@@ -126,13 +166,24 @@ export function PumpingLemmaWizard() {
       <div className="grid gap-4 lg:grid-cols-2">
         <label className="block text-sm lg:col-span-2">
           <span className="font-medium">Lenguaje L</span>
-          <input
-            type="text"
+          <textarea
+            rows={2}
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="mt-1 w-full rounded-md border px-3 py-2 font-mono text-sm dark:border-neutral-600 dark:bg-neutral-800"
-            placeholder="L = { a^n b^n | n ≥ 0 }"
+            spellCheck={false}
+            autoComplete="off"
+            className="mt-1 w-full resize-y rounded-md border px-3 py-2 font-mono text-sm dark:border-neutral-600 dark:bg-neutral-800"
+            placeholder="L = { a^n b^n | n >= 0 }"
           />
+          <span className="mt-1 block text-xs text-neutral-500">
+            Operadores: &gt;=, &lt;=, &gt;, &lt;, =, != (también ≥, ≤, ≠). Ej.: n &gt;= 0,
+            m &gt;= n, |w| &gt;= p.
+          </span>
+          {languageValidation.error && (
+            <span className="mt-1 block text-xs text-red-600 dark:text-red-400">
+              {languageValidation.error}
+            </span>
+          )}
         </label>
 
         <label className="block text-sm">
