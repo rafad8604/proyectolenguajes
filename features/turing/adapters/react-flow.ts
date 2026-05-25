@@ -67,6 +67,7 @@ export function turingToEdges(
         isActive,
         offsetIndex: meta?.offsetIndex ?? 0,
         totalSiblings: meta?.totalSiblings ?? 1,
+        curveSign: meta?.curveSign ?? 1,
       },
     };
   });

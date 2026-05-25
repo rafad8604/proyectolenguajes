@@ -1,4 +1,4 @@
-import { MarkerType } from '@xyflow/react';
+import { MarkerType, type EdgeMarker } from '@xyflow/react';
 import type { CSSProperties } from 'react';
 
 export interface GraphEdgeData extends Record<string, unknown> {
@@ -8,6 +8,8 @@ export interface GraphEdgeData extends Record<string, unknown> {
   isEpsilon?: boolean;
   offsetIndex?: number;
   totalSiblings?: number;
+  /** Lado de curvatura para separar aristas bidireccionales. */
+  curveSign?: 1 | -1;
 }
 
 export const defaultDirectedMarker = {
@@ -36,6 +38,22 @@ export function edgeLabelStyle(data: GraphEdgeData | undefined): CSSProperties {
     fontSize: 11,
     fontWeight: data?.isActive ? 700 : 500,
     fill: data?.isActive ? activeEdgeColor : '#404040',
+  };
+}
+
+export function edgeMarkerColor(data: GraphEdgeData | undefined): string {
+  if (data?.isActive) return activeEdgeColor;
+  if (data?.isVisited) return '#d97706';
+  return '#525252';
+}
+
+/** Marcador de flecha con color acorde al estado de la arista. */
+export function markerEndForEdge(data: GraphEdgeData | undefined): EdgeMarker {
+  return {
+    type: MarkerType.ArrowClosed,
+    width: 18,
+    height: 18,
+    color: edgeMarkerColor(data),
   };
 }
 

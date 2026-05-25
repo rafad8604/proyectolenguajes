@@ -5,26 +5,52 @@ import {
   EdgeLabelRenderer,
   type EdgeProps,
 } from '@xyflow/react';
+import { GRAPH_NODE_RADIUS } from '../constants';
 import {
   edgeLabelStyle,
   edgeStrokeStyle,
   type GraphEdgeData,
 } from './edge-types';
 
-/** Arco de self-loop encima del nodo (centro aproximado del nodo 56px). */
-function buildSelfLoopPath(
+export interface SelfLoopGeometry {
+  path: string;
+  labelX: number;
+  labelY: number;
+}
+
+/**
+ * Arco abierto encima del nodo (no cerrado) para que markerEnd sea visible.
+ */
+export function buildSelfLoopGeometry(
   x: number,
   y: number,
   index: number,
-  total: number
-): string {
-  const loopW = 36 + (total > 1 ? index * 8 : 0);
-  const loopH = 40 + (total > 1 ? index * 6 : 0);
-  const top = y - 28 - (total > 1 ? index * 6 : 0);
-  const left = x - loopW / 2;
-  const right = x + loopW / 2;
-  const bottom = top + loopH;
-  return `M ${x} ${y - 8} C ${right} ${top}, ${right} ${bottom}, ${x} ${y + 6} C ${left} ${bottom}, ${left} ${top}, ${x} ${y - 8}`;
+  total: number,
+  nodeRadius = GRAPH_NODE_RADIUS
+): SelfLoopGeometry {
+  const r = nodeRadius;
+  const stack = index;
+  const lift = 14 + stack * 10;
+  const spread = 20 + stack * 8;
+
+  const startX = x + r * 0.55;
+  const startY = y - r * 0.75;
+  const endX = x - r * 0.55;
+  const endY = y - r * 0.75;
+
+  const apexY = y - r - lift;
+  const ctrl1X = x + spread;
+  const ctrl1Y = apexY;
+  const ctrl2X = x - spread;
+  const ctrl2Y = apexY;
+
+  const path = `M ${startX} ${startY} C ${ctrl1X} ${ctrl1Y}, ${ctrl2X} ${ctrl2Y}, ${endX} ${endY}`;
+
+  return {
+    path,
+    labelX: x,
+    labelY: apexY - 14 - (total > 1 ? stack * 4 : 0),
+  };
 }
 
 export function SelfLoopEdge({
@@ -36,15 +62,13 @@ export function SelfLoopEdge({
   markerEnd,
 }: EdgeProps) {
   const edgeData = (data ?? {}) as GraphEdgeData;
-  const path = buildSelfLoopPath(
+  const { path, labelX, labelY } = buildSelfLoopGeometry(
     sourceX,
     sourceY,
     edgeData.offsetIndex ?? 0,
     edgeData.totalSiblings ?? 1
   );
   const displayLabel = (label as string) ?? edgeData.label ?? '';
-  const labelX = sourceX;
-  const labelY = sourceY - 52 - (edgeData.offsetIndex ?? 0) * 8;
 
   return (
     <>
@@ -52,7 +76,10 @@ export function SelfLoopEdge({
         id={id}
         path={path}
         markerEnd={markerEnd}
-        style={edgeStrokeStyle(edgeData)}
+        style={{
+          ...edgeStrokeStyle(edgeData),
+          zIndex: 1,
+        }}
         interactionWidth={20}
       />
       {displayLabel ? (
@@ -63,6 +90,7 @@ export function SelfLoopEdge({
               position: 'absolute',
               transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
               pointerEvents: 'all',
+              zIndex: 2,
               ...edgeLabelStyle(edgeData),
             }}
           >

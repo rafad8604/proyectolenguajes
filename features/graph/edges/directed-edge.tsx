@@ -26,10 +26,12 @@ export function DirectedEdge({
   markerEnd,
 }: EdgeProps) {
   const edgeData = (data ?? {}) as GraphEdgeData;
-  const offset = parallelPathOffset(
-    edgeData.offsetIndex ?? 0,
-    edgeData.totalSiblings ?? 1
-  );
+  const curveSign = edgeData.curveSign ?? 1;
+  const offset =
+    parallelPathOffset(
+      edgeData.offsetIndex ?? 0,
+      edgeData.totalSiblings ?? 1
+    ) * curveSign;
 
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
@@ -38,7 +40,7 @@ export function DirectedEdge({
     targetX,
     targetY,
     targetPosition,
-    borderRadius: 12,
+    borderRadius: (edgeData.totalSiblings ?? 1) > 2 ? 16 : 12,
     offset,
   });
 

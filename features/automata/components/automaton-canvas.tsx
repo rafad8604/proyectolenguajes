@@ -3,16 +3,17 @@
 import { useCallback, useMemo } from 'react';
 import {
   ReactFlow,
-  Background,
-  Controls,
-  MiniMap,
   type Connection,
   type Node,
   type OnNodesChange,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import type { Automaton } from 'types/automaton';
-import { sharedEdgeTypes, sharedNodeTypes } from 'features/graph';
+import {
+  FlowDiagramChrome,
+  sharedEdgeTypes,
+  sharedNodeTypes,
+} from 'features/graph';
 import { defaultDirectedMarker } from 'features/graph/edges/edge-types';
 import { useAutomatonStore } from '../store/automaton-store';
 import { useSimulationStore } from '../store/simulation-store';
@@ -163,9 +164,7 @@ export function AutomatonCanvas({
         fitView
         proOptions={{ hideAttribution: true }}
       >
-        <Background gap={16} size={1} />
-        <Controls />
-        <MiniMap zoomable pannable />
+        <FlowDiagramChrome />
       </ReactFlow>
     </div>
   );
