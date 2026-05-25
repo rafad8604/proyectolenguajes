@@ -21,6 +21,10 @@ import {
   automatonToNodes,
   type AutomatonGraphHighlight,
 } from '../adapters/react-flow';
+import {
+  buildVisualSnapshot,
+  snapshotToGraphHighlight,
+} from 'lib/core/automata';
 
 export interface AutomatonCanvasProps {
   /** Si se omite, usa el autómata del store global. */
@@ -60,14 +64,10 @@ export function AutomatonCanvas({
 
   const highlightFromSim = useMemo(() => {
     if (highlightProp !== undefined) return highlightProp;
-    if (automatonProp && !highlightProp) return highlightProp;
-    const step = trace?.steps[currentStepIndex];
-    if (!step) return undefined;
-    return {
-      activeStateIds: step.activeStateIds,
-      activeTransitionIds: step.appliedTransitionIds,
-    };
-  }, [highlightProp, automatonProp, trace, currentStepIndex]);
+    if (!trace || trace.steps.length === 0) return undefined;
+    const snapshot = buildVisualSnapshot(trace, currentStepIndex, automaton);
+    return snapshotToGraphHighlight(snapshot);
+  }, [highlightProp, trace, currentStepIndex, automaton]);
 
   const nodes = useMemo(
     () => automatonToNodes(automaton, highlightFromSim),

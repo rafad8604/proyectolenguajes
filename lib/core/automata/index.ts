@@ -30,6 +30,11 @@ export type {
   SimulationTrace,
 } from './simulation';
 export {
+  buildVisualSnapshot,
+  snapshotToGraphHighlight,
+} from './visual-highlight';
+export type { SimulationVisualSnapshot } from './visual-highlight';
+export {
   convertNfaToDfa,
   formatSubsetLabel,
   subsetKey,

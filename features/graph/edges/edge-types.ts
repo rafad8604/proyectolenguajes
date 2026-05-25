@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react';
 export interface GraphEdgeData extends Record<string, unknown> {
   label?: string;
   isActive?: boolean;
+  isVisited?: boolean;
   isEpsilon?: boolean;
   offsetIndex?: number;
   totalSiblings?: number;
@@ -20,10 +21,12 @@ export const activeEdgeColor = '#2563eb';
 
 export function edgeStrokeStyle(data: GraphEdgeData | undefined): CSSProperties {
   const isActive = data?.isActive;
+  const isVisited = data?.isVisited;
   const isEpsilon = data?.isEpsilon;
   return {
-    stroke: isActive ? activeEdgeColor : '#525252',
-    strokeWidth: isActive ? 3 : 1.5,
+    stroke: isActive ? activeEdgeColor : isVisited ? '#d97706' : '#525252',
+    strokeWidth: isActive ? 3 : isVisited ? 2 : 1.5,
+    opacity: isVisited && !isActive ? 0.85 : 1,
     ...(isEpsilon ? { strokeDasharray: '6 4' } : {}),
   };
 }
