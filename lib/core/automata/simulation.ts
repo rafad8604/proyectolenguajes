@@ -30,6 +30,39 @@ export interface SimulationTrace {
   error?: string;
 }
 
+/** Límite de pasos en una traza (evita trazas enormes o bucles ε). */
+export const MAX_SIMULATION_STEPS = 500;
+
+function configKey(stateIds: string[], inputIndex: number): string {
+  return `${inputIndex}|${sortStateIds(stateIds).join(',')}`;
+}
+
+function abortWithLoop(
+  input: string,
+  steps: SimStep[],
+  stepIndex: number,
+  message: string
+): SimulationTrace {
+  steps.push(
+    createStep(stepIndex, input, {
+      kind: 'halt',
+      activeStateIds: [],
+      inputIndex: steps[steps.length - 1]?.inputIndex ?? 0,
+      currentSymbol: null,
+      consumedPrefix: steps[steps.length - 1]?.consumedPrefix ?? '',
+      appliedTransitionIds: [],
+      explanation: message,
+      outcome: 'rejected',
+    })
+  );
+  return {
+    input,
+    steps,
+    finalOutcome: 'rejected',
+    error: message,
+  };
+}
+
 function stateName(automaton: Automaton, id: string): string {
   return automaton.states.find((s) => s.id === id)?.name ?? id;
 }
@@ -158,6 +191,31 @@ export function buildSimulationTrace(
   const steps: SimStep[] = [];
   let stepIndex = 0;
   const q0 = automaton.initialStateId;
+  const seenConfigs = new Set<string>();
+  const trackNfaConfig =
+    automaton.type === 'nfa'
+      ? (stateIds: string[], inputIndex: number): SimulationTrace | null => {
+          if (steps.length >= MAX_SIMULATION_STEPS) {
+            return abortWithLoop(
+              input,
+              steps,
+              stepIndex,
+              `Se alcanzó el límite de ${MAX_SIMULATION_STEPS} pasos (posible bucle ε).`
+            );
+          }
+          const key = configKey(stateIds, inputIndex);
+          if (seenConfigs.has(key)) {
+            return abortWithLoop(
+              input,
+              steps,
+              stepIndex,
+              `Configuración repetida en índice ${inputIndex} (posible bucle ε).`
+            );
+          }
+          seenConfigs.add(key);
+          return null;
+        }
+      : null;
 
   steps.push(
     createStep(stepIndex++, input, {
@@ -174,6 +232,11 @@ export function buildSimulationTrace(
 
   let activeStateIds: string[] =
     automaton.type === 'dfa' ? [q0] : epsilonClosure(automaton, [q0]);
+
+  if (trackNfaConfig) {
+    const loop = trackNfaConfig(activeStateIds, 0);
+    if (loop) return loop;
+  }
 
   if (automaton.type === 'nfa') {
     const before = [q0];
@@ -300,6 +363,20 @@ export function buildSimulationTrace(
       }
 
       activeStateIds = nextIds;
+
+      if (trackNfaConfig) {
+        const loop = trackNfaConfig(activeStateIds, i + 1);
+        if (loop) return loop;
+      }
+    }
+
+    if (steps.length >= MAX_SIMULATION_STEPS) {
+      return abortWithLoop(
+        input,
+        steps,
+        stepIndex,
+        `Se alcanzó el límite de ${MAX_SIMULATION_STEPS} pasos.`
+      );
     }
   }
 

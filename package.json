@@ -3,7 +3,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "vitest run"
   },
   "dependencies": {
     "@tailwindcss/postcss": "4.0.0-alpha.13",
@@ -22,5 +23,8 @@
     "tailwindcss": "4.0.0-alpha.13",
     "typescript": "^5",
     "zustand": "^5.0.13"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
   }
 }

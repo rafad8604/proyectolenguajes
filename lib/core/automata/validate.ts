@@ -182,6 +182,9 @@ export function validateDeterministic(automaton: Automaton): ValidationResult {
   for (const [key, targets] of keyMap.entries()) {
     if (targets.length > 1) {
       const [fromId, sym] = key.split('|');
+      if (automaton.type === 'nfa' && sym === 'ε') {
+        continue;
+      }
       const fromName = getStateName(automaton, fromId);
       issues.push({
         code: 'NON_DETERMINISTIC',

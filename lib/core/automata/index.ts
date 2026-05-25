@@ -22,7 +22,21 @@ export {
   buildSimulationTrace,
   getOutcomeLabel,
   getStepSymbolDisplay,
+  MAX_SIMULATION_STEPS,
 } from './simulation';
+export {
+  compareSimulations,
+  formatVisitedStates,
+} from './compare-simulations';
+export type {
+  SimulationComparison,
+  StructuralSummary,
+} from './compare-simulations';
+export { checkEquivalenceOnSamples } from './equivalence-check';
+export type {
+  EquivalenceCheckResult,
+  EquivalenceSampleResult,
+} from './equivalence-check';
 export type {
   SimulationOutcome,
   SimStep,

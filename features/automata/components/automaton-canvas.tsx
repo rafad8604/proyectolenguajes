@@ -24,6 +24,7 @@ import {
 import {
   buildVisualSnapshot,
   snapshotToGraphHighlight,
+  type SimulationTrace,
 } from 'lib/core/automata';
 
 export interface AutomatonCanvasProps {
@@ -37,6 +38,9 @@ export interface AutomatonCanvasProps {
     position: { x: number; y: number }
   ) => void;
   highlight?: AutomatonGraphHighlight;
+  /** Traza controlada (p. ej. Thompson dual); evita el store global. */
+  trace?: SimulationTrace | null;
+  stepIndex?: number;
   className?: string;
   ariaLabel?: string;
 }
@@ -47,6 +51,8 @@ export function AutomatonCanvas({
   layoutDraggable = false,
   onStatePositionChange,
   highlight: highlightProp,
+  trace: traceProp,
+  stepIndex: stepIndexProp,
   className = 'h-[min(420px,50vh)] min-h-[320px]',
   ariaLabel = 'Diagrama del autómata finito',
 }: AutomatonCanvasProps) {
@@ -55,8 +61,12 @@ export function AutomatonCanvas({
   const setPendingConnection = useAutomatonStore((s) => s.setPendingConnection);
   const selectState = useAutomatonStore((s) => s.selectState);
 
-  const trace = useSimulationStore((s) => s.trace);
-  const currentStepIndex = useSimulationStore((s) => s.currentStepIndex);
+  const storeTrace = useSimulationStore((s) => s.trace);
+  const storeStepIndex = useSimulationStore((s) => s.currentStepIndex);
+  const useControlledSim =
+    traceProp !== undefined && stepIndexProp !== undefined;
+  const trace = useControlledSim ? traceProp : storeTrace;
+  const currentStepIndex = useControlledSim ? stepIndexProp : storeStepIndex;
 
   const automaton = automatonProp ?? storeAutomaton;
   const canDragLayout = layoutDraggable || !!onStatePositionChange;
@@ -67,7 +77,7 @@ export function AutomatonCanvas({
     if (!trace || trace.steps.length === 0) return undefined;
     const snapshot = buildVisualSnapshot(trace, currentStepIndex, automaton);
     return snapshotToGraphHighlight(snapshot);
-  }, [highlightProp, trace, currentStepIndex, automaton]);
+  }, [highlightProp, trace, currentStepIndex, automaton, useControlledSim]);
 
   const nodes = useMemo(
     () => automatonToNodes(automaton, highlightFromSim),

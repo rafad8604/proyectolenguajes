@@ -3,17 +3,27 @@
 import { useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { buildNfaFromRegex } from 'lib/core/thompson/build-nfa';
+import {
+  validateThompsonNfa,
+  hasThompsonValidationErrors,
+} from 'lib/core/thompson/validate-thompson-nfa';
 import { convertNfaToDfa, patchStatePosition } from 'lib/core/automata';
 import { exportAutomatonToJff } from 'lib/jflap';
 import { downloadTextFile } from 'lib/utils/download';
 import { AutomatonCanvas } from 'features/automata/components/automaton-canvas';
-import { SimulationPanel } from 'features/automata/components/simulation-panel';
 import { EPSILON_SYMBOL } from 'lib/core/automata';
+import { ThompsonNfaSimulation } from './ThompsonNfaSimulation';
+import { ThompsonComparisonPanel } from './ThompsonComparisonPanel';
 import type { Automaton } from 'types/automaton';
 import { cn } from 'lib/utils/cn';
 
 const EXAMPLES = [
   { label: '(a|b)*abb', regex: '(a|b)*abb' },
+  { label: 'a*', regex: 'a*' },
+  { label: 'ab', regex: 'ab' },
+  { label: '(a|b)*', regex: '(a|b)*' },
+  { label: 'a+b?', regex: 'a+b?' },
+  { label: '(ab|ba)*', regex: '(ab|ba)*' },
   { label: 'a+b', regex: 'a+b' },
   { label: 'a?', regex: 'a?' },
   { label: '[ab]*', regex: '[ab]*' },
@@ -40,7 +50,10 @@ function TransitionTableReadonly({ automaton }: { automaton: Automaton }) {
         </thead>
         <tbody>
           {automaton.transitions.map((t) => (
-            <tr key={t.id} className="border-b border-neutral-100 dark:border-neutral-800">
+            <tr
+              key={t.id}
+              className="border-b border-neutral-100 dark:border-neutral-800"
+            >
               <td className="py-1 pr-2 font-mono">{name(t.from)}</td>
               <td className="py-1 pr-2 font-mono">
                 {t.isEpsilon ? EPSILON_SYMBOL : t.symbol}
@@ -54,6 +67,56 @@ function TransitionTableReadonly({ automaton }: { automaton: Automaton }) {
   );
 }
 
+function ValidationPanel({
+  results,
+}: {
+  results: ReturnType<typeof validateThompsonNfa>;
+}) {
+  const hasErrors = hasThompsonValidationErrors(results);
+  return (
+    <section className="rounded-lg border p-4 dark:border-neutral-700">
+      <h3 className="text-sm font-semibold">Validación del AFND</h3>
+      <ul className="mt-2 space-y-2 text-xs">
+        {results.map((r) => (
+          <li key={r.id}>
+            <span
+              className={cn(
+                'font-medium',
+                r.passed
+                  ? 'text-green-700 dark:text-green-400'
+                  : 'text-red-700 dark:text-red-400'
+              )}
+            >
+              {r.passed ? '✓' : '✗'} {r.label}
+            </span>
+            {r.issues.length > 0 && (
+              <ul className="mt-1 list-inside list-disc text-neutral-600 dark:text-neutral-400">
+                {r.issues.map((issue, i) => (
+                  <li
+                    key={`${r.id}-${i}`}
+                    className={
+                      issue.severity === 'error'
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-amber-700 dark:text-amber-400'
+                    }
+                  >
+                    {issue.message}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+      {hasErrors && (
+        <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+          Corrija los errores antes de confiar en la simulación o conversión.
+        </p>
+      )}
+    </section>
+  );
+}
+
 export function ThompsonBuilder() {
   const [regex, setRegex] = useState('(a|b)*abb');
   const [result, setResult] = useState<ReturnType<typeof buildNfaFromRegex> | null>(
@@ -62,12 +125,19 @@ export function ThompsonBuilder() {
   const [stepIndex, setStepIndex] = useState(0);
   const [displayNfa, setDisplayNfa] = useState<Automaton | null>(null);
   const [displayDfa, setDisplayDfa] = useState<Automaton | null>(null);
+  const [showComparison, setShowComparison] = useState(false);
+
+  const validationResults = useMemo(
+    () => (displayNfa ? validateThompsonNfa(displayNfa) : []),
+    [displayNfa]
+  );
 
   const handleBuild = () => {
     const built = buildNfaFromRegex(regex);
     setResult(built);
     setStepIndex(0);
     setDisplayDfa(null);
+    setShowComparison(false);
     if (built.automaton && !built.error) {
       setDisplayNfa(structuredClone(built.automaton));
     } else {
@@ -115,13 +185,21 @@ export function ThompsonBuilder() {
     const conversion = convertNfaToDfa(nfa);
     if (!conversion.error) {
       setDisplayDfa(structuredClone(conversion.dfa));
+      setShowComparison(true);
     }
   };
+
+  const defaultSimInput =
+    regex === 'a*' || regex === '(a|b)*' || regex === '(ab|ba)*'
+      ? ''
+      : regex === 'ab'
+        ? 'ab'
+        : 'aab';
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end gap-3">
-        <div className="flex-1 min-w-[240px]">
+        <div className="min-w-[240px] flex-1">
           <label htmlFor="regex-input" className="text-sm font-medium">
             Expresión regular
           </label>
@@ -166,7 +244,7 @@ export function ThompsonBuilder() {
           <div className="grid gap-4 lg:grid-cols-2">
             <section className="rounded-lg border p-4 dark:border-neutral-700">
               <h3 className="text-sm font-semibold">Tokens</h3>
-              <p className="mt-2 font-mono text-xs break-all">{tokenDisplay}</p>
+              <p className="mt-2 break-all font-mono text-xs">{tokenDisplay}</p>
             </section>
             <section className="rounded-lg border p-4 dark:border-neutral-700">
               <h3 className="text-sm font-semibold">Normalizada / Postfix</h3>
@@ -182,7 +260,9 @@ export function ThompsonBuilder() {
           </div>
 
           <section className="rounded-lg border p-4 dark:border-neutral-700">
-            <h3 className="text-sm font-semibold">Pasos de construcción (Thompson)</h3>
+            <h3 className="text-sm font-semibold">
+              Pasos de construcción (Thompson)
+            </h3>
             <div className="mt-2 flex flex-wrap gap-2">
               <button
                 type="button"
@@ -233,6 +313,10 @@ export function ThompsonBuilder() {
 
           {nfa && (
             <>
+              {validationResults.length > 0 && (
+                <ValidationPanel results={validationResults} />
+              )}
+
               <section>
                 <h3 className="mb-2 text-sm font-semibold">AFND resultante</h3>
                 <AutomatonCanvas
@@ -246,7 +330,9 @@ export function ThompsonBuilder() {
               </section>
 
               <section className="rounded-lg border p-4 dark:border-neutral-700">
-                <h3 className="mb-2 text-sm font-semibold">Tabla de transiciones</h3>
+                <h3 className="mb-2 text-sm font-semibold">
+                  Tabla de transiciones
+                </h3>
                 <TransitionTableReadonly automaton={nfa} />
               </section>
 
@@ -287,12 +373,21 @@ export function ThompsonBuilder() {
                 </section>
               )}
 
-              <section className="rounded-lg border p-4 dark:border-neutral-700">
-                <h3 className="mb-3 text-sm font-semibold">
-                  Simular cadenas sobre el AFND
-                </h3>
-                <SimulationPanel automaton={nfa} showPresets={false} />
-              </section>
+              {displayDfa && showComparison ? (
+                <ThompsonComparisonPanel
+                  nfa={nfa}
+                  dfa={displayDfa}
+                  defaultInput={defaultSimInput}
+                  onNfaPositionChange={handleNfaPositionChange}
+                  onDfaPositionChange={handleDfaPositionChange}
+                />
+              ) : (
+                <ThompsonNfaSimulation
+                  nfa={nfa}
+                  defaultInput={defaultSimInput}
+                  onStatePositionChange={handleNfaPositionChange}
+                />
+              )}
             </>
           )}
         </>
