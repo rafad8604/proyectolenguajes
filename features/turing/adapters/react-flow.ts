@@ -61,6 +61,11 @@ export function turingToEdges(
       source: t.from,
       target: t.to,
       type: isSelfLoop ? 'selfLoop' : 'directed',
+      // Handles deterministas para self-loops: el midpoint right/left = centro
+      // del nodo, lo que mantiene la geometría del arco por encima del nodo.
+      ...(isSelfLoop
+        ? { sourceHandle: 'right', targetHandle: 'left' }
+        : {}),
       label,
       animated: isActive,
       data: {

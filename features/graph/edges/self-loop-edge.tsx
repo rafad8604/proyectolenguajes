@@ -30,10 +30,15 @@ export interface SelfLoopGeometry {
 
 /**
  * Arco abierto encima del nodo (no cerrado) para que markerEnd sea visible.
+ *
+ * `centerX` y `centerY` deben ser el **centro del nodo**, no la posición de un
+ * handle source/target. En React Flow v12 `sourceX/sourceY` corresponden al
+ * handle y no al centro, por lo que quien llame debe pasar el midpoint de
+ * source y target (o el centro del nodo derivado de otra forma).
  */
 export function buildSelfLoopGeometry(
-  x: number,
-  y: number,
+  centerX: number,
+  centerY: number,
   index: number,
   total: number,
   nodeRadius = GRAPH_NODE_RADIUS,
@@ -52,27 +57,27 @@ export function buildSelfLoopGeometry(
       ? visual.loopSpread
       : defaultSpread;
 
-  const startX = x + r * 0.55;
-  const startY = y - r * 0.75;
-  const endX = x - r * 0.55;
-  const endY = y - r * 0.75;
+  const startX = centerX + r * 0.55;
+  const startY = centerY - r * 0.75;
+  const endX = centerX - r * 0.55;
+  const endY = centerY - r * 0.75;
 
-  const apexY = y - r - lift;
-  const ctrl1X = x + spread;
+  const apexY = centerY - r - lift;
+  const ctrl1X = centerX + spread;
   const ctrl1Y = apexY;
-  const ctrl2X = x - spread;
+  const ctrl2X = centerX - spread;
   const ctrl2Y = apexY;
 
   const path = `M ${startX} ${startY} C ${ctrl1X} ${ctrl1Y}, ${ctrl2X} ${ctrl2Y}, ${endX} ${endY}`;
 
-  const labelX = x;
+  const labelX = centerX;
   const labelY = apexY - 14 - (total > 1 ? stack * 4 : 0);
 
   return {
     path,
     labelX,
     labelY,
-    handleX: x,
+    handleX: centerX,
     handleY: apexY - 8,
     lift,
     spread,
@@ -85,6 +90,8 @@ export function SelfLoopEdge({
   id,
   sourceX,
   sourceY,
+  targetX,
+  targetY,
   data,
   label,
   markerEnd,
@@ -96,9 +103,16 @@ export function SelfLoopEdge({
   const visual = edgeData.visual;
   const transitionId = edgeData.transitionId ?? id;
 
+  // Derivar el centro del nodo como midpoint entre los handles source/target.
+  // Es robusto frente al par de handles que elija React Flow para self-loops
+  // porque los handles del nodo (top/bottom/left/right) son simétricos
+  // respecto al centro.
+  const centerX = (sourceX + targetX) / 2;
+  const centerY = (sourceY + targetY) / 2;
+
   const { path, handleX, handleY, lift, spread } = buildSelfLoopGeometry(
-    sourceX,
-    sourceY,
+    centerX,
+    centerY,
     edgeData.offsetIndex ?? 0,
     edgeData.totalSiblings ?? 1,
     GRAPH_NODE_RADIUS,

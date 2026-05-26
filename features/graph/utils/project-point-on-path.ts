@@ -3,14 +3,18 @@ import {
   type FlowPoint,
 } from './quadratic-edge-path';
 
-export const LABEL_ALONG_MIN = 0.08;
-export const LABEL_ALONG_MAX = 0.92;
+// Rango completo del path: la etiqueta puede recorrer la flecha de punta a
+// punta (0%-100%). Antes estaba acotado a [0.08, 0.92] lo que daba la
+// sensación de que el arrastre con ratón era limitado.
+export const LABEL_ALONG_MIN = 0;
+export const LABEL_ALONG_MAX = 1;
 
 export interface PathProjection extends FlowPoint {
   along: number;
 }
 
 export function clampLabelAlong(t: number): number {
+  if (Number.isNaN(t)) return 0.5;
   return Math.max(LABEL_ALONG_MIN, Math.min(LABEL_ALONG_MAX, t));
 }
 

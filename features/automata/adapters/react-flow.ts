@@ -71,6 +71,11 @@ export function automatonToEdges(
       source: t.from,
       target: t.to,
       type: isSelfLoop ? 'selfLoop' : 'directed',
+      // Handles deterministas para self-loops: el midpoint right/left = centro
+      // del nodo, lo que mantiene la geometría del arco por encima del nodo.
+      ...(isSelfLoop
+        ? { sourceHandle: 'right', targetHandle: 'left' }
+        : {}),
       label: t.isEpsilon ? EPSILON_SYMBOL : t.symbol,
       animated: t.isEpsilon || isActive,
       data: {
