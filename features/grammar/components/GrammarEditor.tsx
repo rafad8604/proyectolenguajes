@@ -1,58 +1,25 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { Grammar, Production } from 'types/grammar';
+import type { ChomskyType, Grammar, Production } from 'types/grammar';
 import {
   formatGrammarAsText,
   validateAndClassify,
   type GrammarInput,
 } from 'lib/core/grammar/classifyGrammar';
+import {
+  CHOMSKY_EXAMPLES,
+  TYPE_HELP,
+  TYPE_SHORT_LABELS,
+  getExampleForType,
+} from 'lib/core/grammar/chomsky-presets';
 import { EPSILON_SYMBOL } from 'lib/core/automata';
 import { downloadTextFile } from 'lib/utils/download';
+import { cn } from 'lib/utils/cn';
 import { ChomskyHierarchyPanel } from './ChomskyHierarchyPanel';
+import { GrammarDerivationPanel } from './GrammarDerivationPanel';
 
-const EXAMPLES: Array<{ label: string; input: GrammarInput }> = [
-  {
-    label: 'Regular (derecha)',
-    input: {
-      name: 'Regular derecha',
-      variablesText: 'S, A',
-      terminalsText: 'a, b',
-      startSymbol: 'S',
-      productionsText: 'S -> aA | b\nA -> aA | b',
-    },
-  },
-  {
-    label: 'Libre de contexto',
-    input: {
-      name: 'Palíndromos',
-      variablesText: 'S',
-      terminalsText: 'a, b',
-      startSymbol: 'S',
-      productionsText: 'S -> aSa | bSb | a | b | ε',
-    },
-  },
-  {
-    label: 'Sensible al contexto',
-    input: {
-      name: 'Copiar a^n b^n c^n (fragmento)',
-      variablesText: 'S, A, B, C',
-      terminalsText: 'a, b, c',
-      startSymbol: 'S',
-      productionsText: 'S -> aSBC | abc\nCB -> BC\nbB -> bb\nbC -> bc\ncC -> cc',
-    },
-  },
-  {
-    label: 'Irrestricta',
-    input: {
-      name: 'Acortamiento',
-      variablesText: 'S, A, B',
-      terminalsText: 'a, b',
-      startSymbol: 'S',
-      productionsText: 'S -> aAB\nAB -> a',
-    },
-  },
-];
+const CHOMSKY_TYPES: ChomskyType[] = [3, 2, 1, 0];
 
 function isEpsilonProd(prod: Production): boolean {
   return prod.right.length === 0 || (prod.right.length === 1 && prod.right[0] === null);
@@ -90,22 +57,27 @@ function groupProductions(grammar: Grammar): string[] {
 }
 
 export function GrammarEditor() {
-  const [variablesText, setVariablesText] = useState('S, A');
-  const [terminalsText, setTerminalsText] = useState('a, b');
-  const [startSymbol, setStartSymbol] = useState('S');
-  const [productionsText, setProductionsText] = useState('S -> aA | b\nA -> aA | b');
-  const [name, setName] = useState('Gramática de ejemplo');
+  const initialExample = getExampleForType(3);
+  const [selectedType, setSelectedType] = useState<ChomskyType>(3);
+  const [variablesText, setVariablesText] = useState(initialExample.variablesText);
+  const [terminalsText, setTerminalsText] = useState(initialExample.terminalsText);
+  const [startSymbol, setStartSymbol] = useState(initialExample.startSymbol);
+  const [productionsText, setProductionsText] = useState(
+    initialExample.productionsText
+  );
+  const [name, setName] = useState(initialExample.name ?? 'Gramática de ejemplo');
   const [copied, setCopied] = useState(false);
 
   const input: GrammarInput = useMemo(
     () => ({
       name,
+      selectedType,
       variablesText,
       terminalsText,
       startSymbol,
       productionsText,
     }),
-    [name, variablesText, terminalsText, startSymbol, productionsText]
+    [name, selectedType, variablesText, terminalsText, startSymbol, productionsText]
   );
 
   const { validation, classification } = useMemo(
@@ -116,6 +88,7 @@ export function GrammarEditor() {
   const grammar = validation.grammar;
   const productionLines = grammar ? groupProductions(grammar) : [];
   const textForm = grammar ? formatGrammarAsText(grammar) : '';
+  const typeHelp = TYPE_HELP[selectedType];
 
   const handleCopy = async () => {
     if (!textForm) return;
@@ -131,17 +104,55 @@ export function GrammarEditor() {
 
   const loadExample = (example: GrammarInput) => {
     setName(example.name ?? 'Gramática');
+    if (example.selectedType !== undefined) {
+      setSelectedType(example.selectedType);
+    }
     setVariablesText(example.variablesText);
     setTerminalsText(example.terminalsText);
     setStartSymbol(example.startSymbol);
     setProductionsText(example.productionsText);
   };
 
+  const handleTypeChange = (type: ChomskyType) => {
+    setSelectedType(type);
+    loadExample(getExampleForType(type));
+  };
+
   return (
     <div className="space-y-6">
+      <section className="rounded-lg border p-4 dark:border-neutral-700">
+        <h3 className="text-sm font-semibold">Tipo de gramática (jerarquía de Chomsky)</h3>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {CHOMSKY_TYPES.map((type) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => handleTypeChange(type)}
+              className={cn(
+                'rounded-md border px-3 py-2 text-xs font-medium transition-colors',
+                selectedType === type
+                  ? 'border-blue-600 bg-blue-50 text-blue-800 dark:border-blue-500 dark:bg-blue-950 dark:text-blue-200'
+                  : 'dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-900/50'
+              )}
+            >
+              {TYPE_SHORT_LABELS[type]}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-4 rounded-md border border-neutral-200 bg-neutral-50 p-3 text-sm dark:border-neutral-700 dark:bg-neutral-900/40">
+          <p className="font-medium">{typeHelp.title}</p>
+          <ul className="mt-2 space-y-1 text-xs text-neutral-600 dark:text-neutral-400">
+            {typeHelp.rules.map((rule) => (
+              <li key={rule}>• {rule}</li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
       <div className="flex flex-wrap gap-2">
-        <span className="self-center text-xs text-neutral-500">Ejemplos:</span>
-        {EXAMPLES.map((ex) => (
+        <span className="self-center text-xs text-neutral-500">Más ejemplos:</span>
+        {CHOMSKY_EXAMPLES.filter((ex) => ex.type === selectedType).map((ex) => (
           <button
             key={ex.label}
             type="button"
@@ -208,12 +219,12 @@ export function GrammarEditor() {
           onChange={(e) => setProductionsText(e.target.value)}
           rows={8}
           className="mt-1 w-full rounded-md border px-3 py-2 font-mono text-sm dark:border-neutral-600 dark:bg-neutral-800"
-          placeholder={'S -> aA | b\nA -> aA | b | ε'}
+          placeholder={typeHelp.placeholder}
         />
         <span className="mt-1 block text-xs text-neutral-500">
-          Una regla por línea. Usa <code className="font-mono">-&gt;</code> o{' '}
-          <code className="font-mono">→</code>. Alternativas con <code className="font-mono">|</code>.
-          Épsilon: ε.
+          Una regla por línea. Usa <code className="font-mono">-&gt;</code>,{' '}
+          <code className="font-mono">→</code> o <code className="font-mono">=&gt;</code>.
+          Alternativas con <code className="font-mono">|</code>. Épsilon: ε.
         </span>
       </label>
 
@@ -288,8 +299,13 @@ export function GrammarEditor() {
 
           <section>
             <h3 className="mb-3 text-sm font-semibold">Jerarquía de Chomsky</h3>
-            <ChomskyHierarchyPanel classification={classification} />
+            <ChomskyHierarchyPanel
+              classification={classification}
+              selectedType={selectedType}
+            />
           </section>
+
+          <GrammarDerivationPanel grammar={grammar} grammarType={selectedType} />
 
           <pre className="overflow-x-auto rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs font-mono dark:border-neutral-700 dark:bg-neutral-900/50">
             {textForm}

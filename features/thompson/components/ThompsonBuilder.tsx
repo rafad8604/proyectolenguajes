@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useCallback } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { buildNfaFromRegex } from 'lib/core/thompson/build-nfa';
 import {
   validateThompsonNfa,
@@ -15,6 +15,7 @@ import {
 import type { TransitionVisual } from 'types/transition-visual';
 import { exportAutomatonToJff } from 'lib/jflap';
 import { downloadTextFile } from 'lib/utils/download';
+import { stashThompsonNfaForConversion } from 'lib/thompson/conversion-handoff';
 import { AutomatonCanvas } from 'features/automata/components/automaton-canvas';
 import { EPSILON_SYMBOL } from 'lib/core/automata';
 import { ThompsonNfaSimulation } from './ThompsonNfaSimulation';
@@ -123,6 +124,7 @@ function ValidationPanel({
 }
 
 export function ThompsonBuilder() {
+  const router = useRouter();
   const [regex, setRegex] = useState('(a|b)*abb');
   const [result, setResult] = useState<ReturnType<typeof buildNfaFromRegex> | null>(
     null
@@ -210,6 +212,12 @@ export function ThompsonBuilder() {
       setDisplayDfa(structuredClone(conversion.dfa));
       setShowComparison(true);
     }
+  };
+
+  const handleOpenDetailedConversion = () => {
+    if (!nfa) return;
+    stashThompsonNfaForConversion(structuredClone(nfa));
+    router.push('/thompson/conversion');
   };
 
   const defaultSimInput =
@@ -375,12 +383,13 @@ export function ThompsonBuilder() {
                 >
                   Convertir a AFD
                 </button>
-                <Link
-                  href="/automatas/conversion"
+                <button
+                  type="button"
+                  onClick={handleOpenDetailedConversion}
                   className="rounded-md border px-4 py-2 text-sm dark:border-neutral-600"
                 >
                   Ver conversión detallada →
-                </Link>
+                </button>
               </div>
 
               {displayDfa && (

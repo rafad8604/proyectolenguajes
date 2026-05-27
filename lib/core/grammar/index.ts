@@ -8,7 +8,22 @@ export {
   classifyGrammar,
   validateAndClassify,
   TYPE_LABELS,
+  getExampleForType,
 } from './classifyGrammar';
+export {
+  CHOMSKY_EXAMPLES,
+  TYPE_HELP,
+  TYPE_SHORT_LABELS,
+} from './chomsky-presets';
+export type { ChomskyExampleInput } from './chomsky-presets';
+export {
+  validateLeftSideForType,
+  getTypeCheck,
+  checkType0,
+  checkType1,
+  checkType2,
+  checkType3,
+} from './chomsky-validation';
 export type {
   GrammarInput,
   GrammarValidationResult,
@@ -16,3 +31,16 @@ export type {
   ClassificationResult,
   TypeCheckResult,
 } from './classifyGrammar';
+export {
+  deriveWord,
+  formatSententialWithHighlight,
+  matchesTerminalPrefix,
+  DEFAULT_DERIVATION_LIMITS,
+} from './derive-word';
+export type {
+  DerivationResult,
+  DerivationStepRecord,
+  DerivationTreeNode,
+  DerivationLimits,
+  DerivationStatus,
+} from './derive-word';

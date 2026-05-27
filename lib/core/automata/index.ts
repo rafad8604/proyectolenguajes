@@ -8,6 +8,13 @@ export {
   nextStateName,
 } from './factory';
 export { patchStatePosition, patchTransitionVisual } from './layout';
+export {
+  isAutomatonReady,
+  isBlankAutomaton,
+  summarizeAutomaton,
+  getAutomatonTypeLabel,
+} from './automaton-summary';
+export type { AutomatonSummary } from './automaton-summary';
 export { deriveAlphabet, syncAlphabet } from './alphabet';
 export { buildFormalDefinition } from './formal';
 export {

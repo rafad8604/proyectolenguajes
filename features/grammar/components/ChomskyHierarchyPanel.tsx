@@ -1,21 +1,32 @@
 'use client';
 
+import type { ChomskyType } from 'types/grammar';
 import type { ClassificationResult, TypeCheckResult } from 'lib/core/grammar/classifyGrammar';
+import { TYPE_SHORT_LABELS } from 'lib/core/grammar/chomsky-presets';
 import { cn } from 'lib/utils/cn';
 
 interface ChomskyHierarchyPanelProps {
   classification: ClassificationResult | null;
+  selectedType?: ChomskyType;
   className?: string;
 }
 
-function TypeCard({ check }: { check: TypeCheckResult }) {
+function TypeCard({
+  check,
+  highlighted,
+}: {
+  check: TypeCheckResult;
+  highlighted: boolean;
+}) {
   return (
     <article
       className={cn(
         'rounded-lg border p-4',
-        check.belongs
-          ? 'border-emerald-300 bg-emerald-50/60 dark:border-emerald-800 dark:bg-emerald-950/30'
-          : 'border-neutral-200 dark:border-neutral-700'
+        highlighted && check.belongs
+          ? 'border-blue-400 ring-2 ring-blue-300/50 dark:border-blue-600 dark:ring-blue-800'
+          : check.belongs
+            ? 'border-emerald-300 bg-emerald-50/60 dark:border-emerald-800 dark:bg-emerald-950/30'
+            : 'border-neutral-200 dark:border-neutral-700'
       )}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -31,6 +42,12 @@ function TypeCard({ check }: { check: TypeCheckResult }) {
           {check.belongs ? 'Cumple la forma' : 'No cumple la forma'}
         </span>
       </div>
+
+      {highlighted && (
+        <p className="mt-2 text-xs font-medium text-blue-700 dark:text-blue-300">
+          Tipo seleccionado en el editor
+        </p>
+      )}
 
       <ul className="mt-3 space-y-1 text-sm text-neutral-700 dark:text-neutral-300">
         {check.reasons.map((reason, i) => (
@@ -54,6 +71,7 @@ function TypeCard({ check }: { check: TypeCheckResult }) {
 
 export function ChomskyHierarchyPanel({
   classification,
+  selectedType,
   className,
 }: ChomskyHierarchyPanelProps) {
   if (!classification) {
@@ -64,6 +82,8 @@ export function ChomskyHierarchyPanel({
     );
   }
 
+  const selectedCheck = classification.selectedTypeCheck;
+
   return (
     <div className={cn('space-y-4', className)}>
       <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-4 dark:border-blue-900 dark:bg-blue-950/30">
@@ -71,6 +91,20 @@ export function ChomskyHierarchyPanel({
           Resultado
         </p>
         <p className="mt-1 text-lg font-semibold">{classification.inferredLabel}</p>
+        {selectedType !== undefined && selectedCheck && (
+          <p
+            className={cn(
+              'mt-2 text-sm font-medium',
+              selectedCheck.belongs
+                ? 'text-emerald-700 dark:text-emerald-300'
+                : 'text-red-700 dark:text-red-300'
+            )}
+          >
+            {selectedCheck.belongs
+              ? `La gramática cumple ${TYPE_SHORT_LABELS[selectedType]}.`
+              : `La gramática no cumple ${TYPE_SHORT_LABELS[selectedType]}.`}
+          </p>
+        )}
         <ul className="mt-2 space-y-1 text-sm text-neutral-700 dark:text-neutral-300">
           {classification.summary.map((line, i) => (
             <li key={i}>• {line}</li>
@@ -88,7 +122,11 @@ export function ChomskyHierarchyPanel({
 
       <div className="grid gap-3 lg:grid-cols-2">
         {classification.hierarchy.map((check) => (
-          <TypeCard key={check.type} check={check} />
+          <TypeCard
+            key={check.type}
+            check={check}
+            highlighted={selectedType === check.type}
+          />
         ))}
       </div>
 

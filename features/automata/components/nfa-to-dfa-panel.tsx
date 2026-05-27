@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
+import type { Automaton } from 'types/automaton';
 import { useAutomatonStore } from '../store/automaton-store';
 import { useConversionStore } from '../store/conversion-store';
 import { AutomatonCanvas } from './automaton-canvas';
@@ -11,9 +13,28 @@ import { cn } from 'lib/utils/cn';
 import { PresetBar } from 'components/ui/preset-bar';
 import { NFA_EPSILON, NFA_ENDS_WITH_A } from '../examples/presets';
 
-export function NfaToDfaPanel() {
-  const nfa = useAutomatonStore((s) => s.automaton);
+export interface NfaToDfaPanelProps {
+  /** AFND fijo (p. ej. desde Thompson); omite el store global del editor. */
+  sourceNfa?: Automaton;
+  /** Ejecuta la conversión al montar cuando hay `sourceNfa`. */
+  autoConvert?: boolean;
+  showPresets?: boolean;
+  showEditorLink?: boolean;
+  backHref?: string;
+  backLabel?: string;
+}
+
+export function NfaToDfaPanel({
+  sourceNfa,
+  autoConvert = false,
+  showPresets = true,
+  showEditorLink = true,
+  backHref,
+  backLabel,
+}: NfaToDfaPanelProps = {}) {
+  const storeNfa = useAutomatonStore((s) => s.automaton);
   const loadAutomaton = useAutomatonStore((s) => s.loadAutomaton);
+  const nfa = sourceNfa ?? storeNfa;
 
   const result = useConversionStore((s) => s.result);
   const currentStepIndex = useConversionStore((s) => s.currentStepIndex);
@@ -27,6 +48,11 @@ export function NfaToDfaPanel() {
   const table = result?.table ?? [];
   const steps = result?.steps ?? [];
   const currentStep = steps[currentStepIndex];
+
+  useEffect(() => {
+    if (!sourceNfa || !autoConvert) return;
+    convert(structuredClone(sourceNfa));
+  }, [sourceNfa, autoConvert, convert]);
 
   const handleConvert = () => convert(structuredClone(nfa));
 
@@ -56,14 +82,17 @@ export function NfaToDfaPanel() {
 
   return (
     <div className="space-y-6">
-      <PresetBar
-        label="Ejemplos AFND"
-        presets={[
-          { id: 'nfa-epsilon', label: 'AFND con ε' },
-          { id: 'nfa-ends-a', label: 'AFND termina en a' },
-        ]}
-        onSelect={handleNfaPreset}
-      />
+      {showPresets && (
+        <PresetBar
+          label="Ejemplos AFND"
+          presets={[
+            { id: 'nfa-epsilon', label: 'AFND con ε' },
+            { id: 'nfa-ends-a', label: 'AFND termina en a' },
+          ]}
+          onSelect={handleNfaPreset}
+        />
+      )}
+
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
@@ -73,12 +102,22 @@ export function NfaToDfaPanel() {
         >
           Convertir AFND actual → AFD
         </button>
-        <Link
-          href="/automatas"
-          className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-        >
-          ← Editar AFND en el constructor
-        </Link>
+        {backHref ? (
+          <Link
+            href={backHref}
+            className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+          >
+            {backLabel ?? '← Volver'}
+          </Link>
+        ) : null}
+        {showEditorLink && !backHref ? (
+          <Link
+            href="/automatas"
+            className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+          >
+            ← Editar AFND en el constructor
+          </Link>
+        ) : null}
       </div>
 
       {nfa.type !== 'nfa' && (

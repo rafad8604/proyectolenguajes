@@ -4,7 +4,7 @@ export type ChomskyType = 0 | 1 | 2 | 3;
 /** Producción de una gramática formal. */
 export interface Production {
   id: string;
-  /** Lado izquierdo: secuencia de variables. */
+  /** Lado izquierdo: secuencia de variables y/o terminales (α). */
   left: string[];
   /**
    * Lado derecho: secuencia de terminales y variables.
