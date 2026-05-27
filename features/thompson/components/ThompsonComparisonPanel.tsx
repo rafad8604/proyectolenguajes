@@ -7,6 +7,8 @@ import {
   compareSimulations,
   formatVisitedStates,
   getOutcomeLabel,
+  resolveTraceStepIndex,
+  unifiedSimulationStepCount,
   type SimulationComparison,
 } from 'lib/core/automata';
 import { AutomatonCanvas } from 'features/automata/components/automaton-canvas';
@@ -65,18 +67,19 @@ export function ThompsonComparisonPanel({
 
   const nfaTrace = comparison?.nfaTrace ?? null;
   const dfaTrace = comparison?.dfaTrace ?? null;
-  const canStep =
-    nfaTrace !== null && nfaTrace.steps.length > 0 && !nfaTrace.error;
-  const atEnd =
-    nfaTrace !== null && stepIndex >= nfaTrace.steps.length - 1;
+  const unifiedSteps = unifiedSimulationStepCount(nfaTrace, dfaTrace);
+  const canStep = unifiedSteps > 0 && !nfaTrace?.error;
+  const atEnd = unifiedSteps > 0 && stepIndex >= unifiedSteps - 1;
   const atStart = stepIndex <= 0;
+  const nfaStepIndex = resolveTraceStepIndex(nfaTrace, stepIndex);
+  const dfaStepIndex = resolveTraceStepIndex(dfaTrace, stepIndex);
 
   useEffect(() => {
-    if (!isPlaying || !nfaTrace || nfaTrace.steps.length === 0) return;
+    if (!isPlaying || unifiedSteps === 0) return;
 
     const timer = window.setInterval(() => {
       setStepIndex((i) => {
-        const max = nfaTrace.steps.length - 1;
+        const max = unifiedSteps - 1;
         if (i >= max) {
           setIsPlaying(false);
           return i;
@@ -86,9 +89,9 @@ export function ThompsonComparisonPanel({
     }, playbackSpeedMs);
 
     return () => window.clearInterval(timer);
-  }, [isPlaying, nfaTrace, playbackSpeedMs]);
+  }, [isPlaying, unifiedSteps, playbackSpeedMs]);
 
-  const currentStep = nfaTrace?.steps[stepIndex] ?? null;
+  const currentStep = nfaTrace?.steps[nfaStepIndex] ?? null;
 
   const handleRunAll = () => {
     if (!canStep) return;
@@ -97,10 +100,10 @@ export function ThompsonComparisonPanel({
   };
 
   const nfaVisited = nfaTrace
-    ? formatVisitedStates(nfaTrace, nfa, stepIndex)
+    ? formatVisitedStates(nfaTrace, nfa, nfaStepIndex)
     : '—';
   const dfaVisited = dfaTrace
-    ? formatVisitedStates(dfaTrace, dfa, stepIndex)
+    ? formatVisitedStates(dfaTrace, dfa, dfaStepIndex)
     : '—';
 
   return (
@@ -265,7 +268,7 @@ export function ThompsonComparisonPanel({
                 onStatePositionChange={onNfaPositionChange}
                 onTransitionVisualChange={onNfaTransitionVisualChange}
                 trace={nfaTrace}
-                stepIndex={stepIndex}
+                stepIndex={nfaStepIndex}
                 className="h-[280px]"
                 ariaLabel="AFND Thompson en comparación"
               />
@@ -284,7 +287,7 @@ export function ThompsonComparisonPanel({
                 onStatePositionChange={onDfaPositionChange}
                 onTransitionVisualChange={onDfaTransitionVisualChange}
                 trace={dfaTrace}
-                stepIndex={stepIndex}
+                stepIndex={dfaStepIndex}
                 className="h-[280px]"
                 ariaLabel="AFD equivalente en comparación"
               />

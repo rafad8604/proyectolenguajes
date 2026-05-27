@@ -46,8 +46,12 @@ export type {
 export {
   buildVisualSnapshot,
   snapshotToGraphHighlight,
+  resolveTraceStepIndex,
+  unifiedSimulationStepCount,
 } from './visual-highlight';
 export type { SimulationVisualSnapshot } from './visual-highlight';
+export { getStateLabelDisplay } from './state-label-display';
+export type { StateLabelDisplay } from './state-label-display';
 export {
   convertNfaToDfa,
   formatSubsetLabel,
