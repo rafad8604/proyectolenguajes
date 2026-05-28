@@ -24,7 +24,8 @@ Página **Acerca del proyecto** (`/acerca`): objetivos, conceptos, módulos y li
 ## Instalación
 
 ```bash
-git clone <url-del-repositorio>
+#Primero debes instalar node.js (current version)
+git clone <https://github.com/rafad8604/proyectolenguajes.git>
 cd proyectolenguajes
 pnpm install
 ```
