@@ -5,8 +5,8 @@ export function Footer() {
   return (
     <footer className="mt-16 border-t border-neutral-200 dark:border-neutral-800 pt-6 pb-8 text-sm text-neutral-500 dark:text-neutral-400">
       <p>
-        Laboratorio de Lenguajes Formales — herramienta educativa para AFD,
-        AFND, máquinas de Turing, gramáticas, Thompson, lema de bombeo y JFLAP.
+        Proyecto final del curso lenguajes de programación de la Universidad de los llanos — herramienta educativa para AFD,
+        AFND, máquinas de Turing, gramáticas, Thompson y lema de bombeo.
       </p>
 
       <nav className="mt-4 flex flex-wrap gap-x-4 gap-y-2" aria-label="Enlaces del sitio">
@@ -31,7 +31,7 @@ export function Footer() {
       </nav>
 
       <p className="mt-4">
-        © {new Date().getFullYear()} — Proyecto académico
+        © {new Date().getFullYear()} — Autores: Brian R. Duran, Jhorman A. Carrillo.
       </p>
     </footer>
   );

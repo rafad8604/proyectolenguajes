@@ -35,9 +35,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="mt-16">
-        <ConceptsOverview />
-      </div>
+      
     </>
   );
 }
