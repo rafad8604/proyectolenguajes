@@ -182,6 +182,10 @@ function buildTreeFromSteps(
     children: [],
   }));
 
+  // Keep a stable reference to the original root node so that
+  // subsequent splices do not change which object represents the root.
+  const root = nodes[0] ?? null;
+
   for (let s = 1; s < steps.length; s++) {
     const step = steps[s]!;
     if (!step.production) continue;
@@ -198,7 +202,7 @@ function buildTreeFromSteps(
     nodes.splice(step.replaceStart, step.replaceLength, ...parent.children);
   }
 
-  return nodes[0] ?? null;
+  return root;
 }
 
 function successMessage(target: string, steps: number): string {
