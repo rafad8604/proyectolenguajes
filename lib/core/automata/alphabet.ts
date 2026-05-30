@@ -1,5 +1,5 @@
 import type { Automaton } from 'types/automaton';
-import { EPSILON_SYMBOL } from './constants';
+import { isEpsilonSymbol } from './constants';
 
 /** Extrae el alfabeto de entrada a partir de las transiciones (sin ε). */
 export function deriveAlphabet(automaton: Automaton): string[] {
@@ -7,13 +7,14 @@ export function deriveAlphabet(automaton: Automaton): string[] {
 
   for (const transition of automaton.transitions) {
     if (transition.isEpsilon) continue;
-    if (transition.symbol.trim() !== '') {
+    const sym = transition.symbol.trim();
+    if (sym !== '' && !isEpsilonSymbol(sym)) {
       symbols.add(transition.symbol);
     }
   }
 
   for (const symbol of automaton.alphabet) {
-    if (symbol !== EPSILON_SYMBOL) {
+    if (!isEpsilonSymbol(symbol)) {
       symbols.add(symbol);
     }
   }

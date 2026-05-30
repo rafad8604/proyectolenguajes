@@ -64,7 +64,7 @@ export function validateLeftSideForType(
         message:
           selectedType === 3
             ? 'Tipo 3: el lado izquierdo debe ser exactamente una variable (ej. S -> aA | b).'
-            : 'Tipo 2: el lado izquierdo debe ser exactamente una variable/no terminal (ej. S -> aSb | ε).',
+            : 'Tipo 2: el lado izquierdo debe ser exactamente una variable/no terminal (ej. S -> aSa | ε).',
       });
     }
     for (const sym of tokens) {
@@ -265,6 +265,28 @@ export function checkType3(
   }
 
   return { type: 3, label: TYPE_LABELS[3], belongs: false, reasons, caveats };
+}
+
+export type RegularGrammarOrientation = 'right' | 'left' | 'mixed' | 'invalid';
+
+/** Indica si todas las producciones son lineales derechas, izquierdas, o mezcladas. */
+export function getRegularGrammarOrientation(
+  grammar: Grammar
+): RegularGrammarOrientation {
+  const variables = new Set(grammar.variables);
+  const terminals = new Set(grammar.terminals);
+  let allRight = true;
+  let allLeft = true;
+
+  for (const prod of grammar.productions) {
+    if (!isRightLinearProduction(prod, variables, terminals).ok) allRight = false;
+    if (!isLeftLinearProduction(prod, variables, terminals).ok) allLeft = false;
+  }
+
+  if (allRight) return 'right';
+  if (allLeft) return 'left';
+  if (grammar.productions.length === 0) return 'invalid';
+  return 'mixed';
 }
 
 export function checkType2(

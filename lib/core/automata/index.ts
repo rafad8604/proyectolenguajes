@@ -1,4 +1,4 @@
-export { EPSILON_SYMBOL, EPSILON_INTERNAL } from './constants';
+export { EPSILON_SYMBOL, EPSILON_INTERNAL, isEpsilonSymbol } from './constants';
 export type { FormalDefinition, ValidationIssue, ValidationResult } from './types';
 export {
   createEmptyAutomaton,
@@ -34,6 +34,7 @@ export {
 export {
   compareSimulations,
   formatVisitedStates,
+  traceHasEpsilonSteps,
 } from './compare-simulations';
 export type {
   SimulationComparison,
@@ -59,6 +60,7 @@ export {
 export type { SimulationVisualSnapshot } from './visual-highlight';
 export { getStateLabelDisplay } from './state-label-display';
 export type { StateLabelDisplay } from './state-label-display';
+export { sanitizeDeterministicAutomaton } from './sanitize-dfa';
 export {
   convertNfaToDfa,
   formatSubsetLabel,

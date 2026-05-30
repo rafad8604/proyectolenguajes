@@ -4,6 +4,7 @@ import {
   buildTuringSimulationTrace,
   type TuringSimulationTrace,
   type TuringOutcome,
+  resolveStepDisplayOutcome,
 } from 'lib/core/turing';
 
 interface TuringSimulationStore {
@@ -127,7 +128,10 @@ export const useTuringSimulationStore = create<TuringSimulationStore>(
     getOutcome: () => {
       const { trace, currentStepIndex } = get();
       if (!trace?.steps.length) return 'idle';
-      return trace.steps[currentStepIndex]?.outcome ?? trace.finalOutcome;
+      return resolveStepDisplayOutcome(
+        trace.steps[currentStepIndex],
+        trace
+      );
     },
   })
 );

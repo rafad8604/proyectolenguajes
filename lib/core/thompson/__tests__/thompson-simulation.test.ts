@@ -3,8 +3,12 @@ import { buildNfaFromRegex } from '../build-nfa';
 import { validateThompsonNfa, hasThompsonValidationErrors } from '../validate-thompson-nfa';
 import { convertNfaToDfa } from 'lib/core/automata/nfa-to-dfa';
 import { checkEquivalenceOnSamples } from 'lib/core/automata/equivalence-check';
-import { compareSimulations } from 'lib/core/automata/compare-simulations';
-import { MAX_SIMULATION_STEPS } from 'lib/core/automata/simulation';
+import {
+  compareSimulations,
+  traceHasEpsilonSteps,
+} from 'lib/core/automata/compare-simulations';
+import { isEpsilonSymbol } from 'lib/core/automata/constants';
+import { buildSimulationTrace, MAX_SIMULATION_STEPS } from 'lib/core/automata/simulation';
 
 const REGEX_CASES = [
   {
@@ -62,6 +66,27 @@ describe('NFA to DFA conversion', () => {
       expect(conversion.dfa.type).toBe('dfa');
       expect(conversion.dfa.states.length).toBeGreaterThan(0);
       expect(conversion.dfa.initialStateId).not.toBeNull();
+    });
+
+    it(`AFD sin transiciones ε para ${regex}`, () => {
+      const { automaton: nfa } = buildNfaFromRegex(regex);
+      const { dfa } = convertNfaToDfa(nfa);
+      expect(dfa.transitions.some((t) => t.isEpsilon)).toBe(false);
+      expect(dfa.transitions.every((t) => !isEpsilonSymbol(t.symbol))).toBe(true);
+      expect(dfa.alphabet.every((s) => !isEpsilonSymbol(s))).toBe(true);
+    });
+
+    it(`simulación AFD sin pasos ε para ${regex}`, () => {
+      const { automaton: nfa } = buildNfaFromRegex(regex);
+      const { dfa } = convertNfaToDfa(nfa);
+      const sample =
+        REGEX_CASES.find((c) => c.regex === regex)?.samples[0] ?? 'aab';
+      expect(nfa.transitions.some((t) => t.isEpsilon)).toBe(true);
+      const dfaTrace = buildSimulationTrace(dfa, sample);
+      expect(traceHasEpsilonSteps(dfaTrace)).toBe(false);
+      expect(dfaTrace.steps.every((s) => s.kind !== 'epsilon')).toBe(true);
+      const consumeSteps = dfaTrace.steps.filter((s) => s.kind === 'consume');
+      expect(consumeSteps.length).toBe(sample.length);
     });
   }
 });

@@ -25,7 +25,7 @@ export const TYPE_HELP: Record<ChomskyType, ChomskyTypeHelp> = {
     title: 'Gramática regular (Tipo 3)',
     rules: [
       'El lado izquierdo debe ser una sola variable (A).',
-      'Forma derecha: A → wB | w | ε (lineal por la derecha), o A → Bw | w | ε (lineal por la izquierda).',
+      'Forma derecha: A → wB | w | ε (lineal por la derecha), o A → Bw | w | ε (lineal por la izquierda). Puedes escribir epsilon o lambda en lugar de ε.',
       'No mezcles lineal derecha e izquierda en la misma gramática.',
     ],
     placeholder: 'S -> aA | b\nA -> aA | b',
@@ -35,9 +35,9 @@ export const TYPE_HELP: Record<ChomskyType, ChomskyTypeHelp> = {
     rules: [
       'El lado izquierdo debe ser exactamente una variable/no terminal.',
       'El lado derecho puede combinar variables y terminales libremente.',
-      'Ejemplo: S → aSb | ε.',
+      'Ejemplo: S → aSa | bSb | a | b | ε (también epsilon o lambda).',
     ],
-    placeholder: 'S -> aSb | bSb | a | b | ε',
+    placeholder: 'S -> aSa | bSb | a | b | ε',
   },
   1: {
     title: 'Gramática sensible al contexto (Tipo 1)',
@@ -95,7 +95,7 @@ export const CHOMSKY_EXAMPLES: Array<{
       variablesText: 'S',
       terminalsText: 'a, b',
       startSymbol: 'S',
-      productionsText: 'S -> aSb | bSb | a | b | ε',
+      productionsText: 'S -> aSa | bSb | a | b | ε',
     },
   },
   {

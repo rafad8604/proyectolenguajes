@@ -15,6 +15,7 @@ import {
   type ProductionValidationIssue,
   type TypeCheckResult,
 } from './chomsky-validation';
+import { epsilonAliasLengthAt, isEpsilonAlias } from './epsilon';
 
 export type { ProductionValidationIssue, TypeCheckResult };
 export { TYPE_LABELS, getExampleForType };
@@ -52,7 +53,6 @@ export interface ClassificationResult {
 }
 
 const ARROW_PATTERN = /\s*(?:->|→|=>)\s*/;
-const EPSILON_ALIASES = new Set(['ε', 'ϵ', 'epsilon', 'EPSILON', 'λ']);
 
 function parseSymbolList(text: string): string[] {
   return text
@@ -65,14 +65,20 @@ function tokenizeString(
   raw: string,
   variables: Set<string>,
   terminals: Set<string>
-): { tokens: string[] } | { error: string } {
+): { tokens: (string | null)[] } | { error: string } {
   const symbols = [...variables, ...terminals].sort((a, b) => b.length - a.length);
-  const tokens: string[] = [];
+  const tokens: (string | null)[] = [];
   let i = 0;
 
   while (i < raw.length) {
     if (/\s/.test(raw[i]!)) {
       i += 1;
+      continue;
+    }
+    const epsLen = epsilonAliasLengthAt(raw, i);
+    if (epsLen !== null) {
+      tokens.push(null);
+      i += epsLen;
       continue;
     }
     let matched = false;
@@ -98,7 +104,7 @@ function parseAlternative(
   terminals: Set<string>
 ): { right: (string | null)[] } | { error: string } {
   const trimmed = alt.trim();
-  if (!trimmed || EPSILON_ALIASES.has(trimmed)) {
+  if (isEpsilonAlias(trimmed)) {
     return { right: [null] };
   }
 
@@ -173,9 +179,19 @@ export function parseGrammarInput(input: GrammarInput): GrammarValidationResult 
       continue;
     }
 
+    if (leftParsed.tokens.some((sym) => sym === null)) {
+      issues.push({
+        line: lineNum,
+        message: 'El lado izquierdo no puede contener ε (cadena vacía).',
+      });
+      continue;
+    }
+
+    const leftSymbols = leftParsed.tokens.filter((sym): sym is string => sym !== null);
+
     issues.push(
       ...validateLeftSideForType(
-        leftParsed.tokens,
+        leftSymbols,
         variableSet,
         terminalSet,
         selectedType,
@@ -202,7 +218,7 @@ export function parseGrammarInput(input: GrammarInput): GrammarValidationResult 
 
       productions.push({
         id: generateId('prod'),
-        left: leftParsed.tokens,
+        left: leftSymbols,
         right: parsed.right,
       });
     }

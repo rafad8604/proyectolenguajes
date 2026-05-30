@@ -79,6 +79,41 @@ describe('parseGrammarInput por tipo de Chomsky', () => {
   });
 });
 
+describe('alias épsilon en producciones', () => {
+  const base = {
+    selectedType: 2 as const,
+    variablesText: 'S',
+    terminalsText: 'a, b',
+    startSymbol: 'S',
+  };
+
+  it.each(['epsilon', 'Epsilon', 'EPSILON', 'lambda', 'Lambda', 'LAMBDA', 'λ'])(
+    'parsea S -> %s como producción vacía',
+    (alias) => {
+      const result = parseGrammarInput({
+        ...base,
+        productionsText: `S -> ${alias}`,
+      });
+      expect(result.valid).toBe(true);
+      expect(
+        result.grammar?.productions.some(
+          (p) => p.right.length === 1 && p.right[0] === null
+        )
+      ).toBe(true);
+    }
+  );
+
+  it('parsea S -> a epsilon b con épsilon en medio', () => {
+    const result = parseGrammarInput({
+      ...base,
+      productionsText: 'S -> a epsilon b',
+    });
+    expect(result.valid).toBe(true);
+    const prod = result.grammar?.productions[0];
+    expect(prod?.right).toEqual(['a', null, 'b']);
+  });
+});
+
 describe('classifyGrammar', () => {
   it('marca Tipo 1 cuando AB -> a viola longitud pero Tipo 0 sí cumple', () => {
     const { classification } = validateAndClassify({

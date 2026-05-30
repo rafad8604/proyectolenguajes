@@ -1,6 +1,7 @@
 import type { ChomskyType, Grammar, Production } from 'types/grammar';
 import { EPSILON_SYMBOL } from '../automata/constants';
 import { formatProd } from './chomsky-validation';
+import { normalizeDerivationTarget } from './epsilon';
 
 export interface DerivationLimits {
   maxSteps: number;
@@ -83,19 +84,64 @@ function terminalString(form: string[], variables: Set<string>): string {
   return form.filter((sym) => !variables.has(sym)).join('');
 }
 
-/** Comprueba compatibilidad parcial con la palabra objetivo (podado). */
+/**
+ * Podado: terminales fijos a izquierda/derecha deben coincidir con prefijo/sufijo del objetivo.
+ * Las variables en el medio pueden expandirse (necesario para palíndromos como aSb con objetivo aba).
+ */
+export function matchesSententialFormTarget(
+  form: string[],
+  target: string,
+  variables: Set<string>
+): boolean {
+  let li = 0;
+  let ri = form.length - 1;
+  let tl = 0;
+  let tr = target.length - 1;
+
+  while (li <= ri) {
+    const sym = form[li]!;
+    if (variables.has(sym)) break;
+    if (tl > tr || sym !== target[tl]) return false;
+    li += 1;
+    tl += 1;
+  }
+
+  while (li <= ri) {
+    const sym = form[ri]!;
+    if (variables.has(sym)) break;
+    if (tl > tr || sym !== target[tr]) return false;
+    ri -= 1;
+    tr -= 1;
+  }
+
+  const middle = form.slice(li, ri + 1);
+  if (middle.length === 0) return tl > tr;
+
+  let p = tl;
+  let middleVars = 0;
+  for (const sym of middle) {
+    if (variables.has(sym)) {
+      middleVars += 1;
+      continue;
+    }
+    if (p > tr || sym !== target[p]) return false;
+    p += 1;
+  }
+  tl = p;
+
+  const remainingTarget = tr - tl + 1;
+  if (remainingTarget < 0) return false;
+  if (remainingTarget === 0) return middleVars === middle.length;
+  return middleVars > 0;
+}
+
+/** @deprecated Usar matchesSententialFormTarget. Mantenido para tests de regresión del prefijo lineal. */
 export function matchesTerminalPrefix(
   form: string[],
   target: string,
   variables: Set<string>
 ): boolean {
-  let pos = 0;
-  for (const sym of form) {
-    if (variables.has(sym)) continue;
-    if (pos >= target.length || sym !== target[pos]) return false;
-    pos += 1;
-  }
-  return true;
+  return matchesSententialFormTarget(form, target, variables);
 }
 
 function countTerminals(form: string[], variables: Set<string>): number {
@@ -195,7 +241,10 @@ function buildTreeFromSteps(
       isVariable: variables.has(sym),
       children: [],
     }));
-    nodes.splice(step.replaceStart, step.replaceLength, ...parent.children);
+    // ε: conservar el nodo padre (sin hijos); no sustituir por lista vacía en nodes.
+    if (right.length > 0) {
+      nodes.splice(step.replaceStart, step.replaceLength, ...parent.children);
+    }
   }
 
   return nodes[0] ?? null;
@@ -219,7 +268,7 @@ export function deriveWord(
 ): DerivationResult {
   const variables = new Set(grammar.variables);
   const terminals = new Set(grammar.terminals);
-  const target = targetWord.trim();
+  const { target } = normalizeDerivationTarget(targetWord);
 
   for (const char of target) {
     if (!terminals.has(char)) {
@@ -244,6 +293,11 @@ export function deriveWord(
       message: 'La gramática no tiene símbolo inicial.',
     };
   }
+
+  const effectiveMaxFormLength =
+    grammarType === 2
+      ? Math.max(limits.maxFormLength, 2 * target.length + grammar.variables.length + 4)
+      : limits.maxFormLength;
 
   const initialForm = [grammar.startSymbol];
   const initialStep: DerivationStepRecord = {
@@ -271,7 +325,7 @@ export function deriveWord(
         steps: current.steps,
         tree: null,
         nodesExplored,
-        message: `Se exploraron ${limits.maxNodesExplored} configuraciones sin encontrar derivación. Aumenta el límite o acota la gramática.`,
+        message: `No se encontró derivación dentro del límite configurado (se exploraron ${limits.maxNodesExplored} configuraciones). Aumenta los límites o acota la gramática.`,
         treeNote: treeNoteForType(grammarType),
       };
     }
@@ -301,9 +355,9 @@ export function deriveWord(
       continue;
     }
 
-    if (form.length > limits.maxFormLength) continue;
+    if (form.length > effectiveMaxFormLength) continue;
     if (countTerminals(form, variables) > target.length) continue;
-    if (!matchesTerminalPrefix(form, target, variables)) continue;
+    if (!matchesSententialFormTarget(form, target, variables)) continue;
 
     const applications = findLeftmostApplications(
       form,
@@ -337,13 +391,16 @@ export function deriveWord(
       ? ' Para gramáticas sensibles al contexto o irrestrictas no se garantiza decidibilidad; solo se busca dentro del límite.'
       : '';
 
+  const targetLabel =
+    target.length === 0 ? `la cadena vacía (${EPSILON_SYMBOL})` : `«${target}»`;
+
   return {
     status: 'not_found',
     targetWord: target,
     steps: [],
     tree: null,
     nodesExplored,
-    message: `No se encontró derivación para «${target}» dentro de los límites (pasos ≤ ${limits.maxSteps}, nodos ≤ ${limits.maxNodesExplored}).${typeHint}`,
+    message: `No se encontró derivación para ${targetLabel} dentro del límite configurado (pasos ≤ ${limits.maxSteps}, longitud intermedia ≤ ${effectiveMaxFormLength}, nodos ≤ ${limits.maxNodesExplored}). Esto no implica que la palabra no pertenezca al lenguaje.${typeHint}`,
     treeNote: treeNoteForType(grammarType),
   };
 }
@@ -357,7 +414,7 @@ function treeNoteForType(
       ? 'La derivación usa producciones con contexto en el lado izquierdo; el árbol no se muestra en ese caso.'
       : undefined;
   }
-  return 'Para gramáticas Tipo 1 o Tipo 0 el árbol de derivación no se garantiza: la búsqueda es acotada y el problema puede ser indedecidable en general.';
+  return 'Para gramáticas Tipo 1 o Tipo 0 el árbol de derivación no se garantiza: la búsqueda es acotada y el problema puede ser indecidible en general.';
 }
 
 export function formatSententialWithHighlight(step: DerivationStepRecord): {

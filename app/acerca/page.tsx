@@ -2,11 +2,38 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { concepts } from 'lib/config/concepts';
 import { mainModules } from 'lib/config/navigation';
+import { userManualSections } from 'lib/config/user-manual';
+import { bibliographyTopics } from 'lib/config/bibliography';
+import {
+  UserManualAccordion,
+  UserManualSections,
+} from 'components/content/UserManualAccordion';
+import { BibliographySection } from 'components/content/BibliographySection';
+
+const manualAnchorByConcept: Record<string, string> = {
+  afd: 'automatas',
+  afnd: 'automatas',
+  turing: 'turing',
+  thompson: 'thompson',
+  grammar: 'gramaticas',
+  pumping: 'pumping',
+  jflap: 'jflap',
+};
+
+const bibliographyAnchorByConcept: Record<string, string> = {
+  afd: 'afd',
+  afnd: 'afnd',
+  turing: 'turing',
+  thompson: 'thompson',
+  grammar: 'grammar',
+  pumping: 'pumping',
+  jflap: 'jflap',
+};
 
 export const metadata: Metadata = {
   title: 'Acerca del proyecto',
   description:
-    'Proyecto educativo de teoría de lenguajes formales: objetivos, módulos y limitaciones.',
+    'Manual de usuario, bibliografía y guía del laboratorio de lenguajes formales.',
 };
 
 export default function AcercaPage() {
@@ -22,6 +49,20 @@ export default function AcercaPage() {
         </p>
       </header>
 
+      <section aria-labelledby="manual-usuario">
+        <h2 id="manual-usuario" className="text-lg font-semibold">
+          Manual de usuario
+        </h2>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+          Tutorial paso a paso para cada módulo. Expande una sección para ver las
+          instrucciones o salta directamente al módulo desde el índice.
+        </p>
+        <div className="mt-4">
+          <UserManualAccordion sections={userManualSections} />
+          <UserManualSections sections={userManualSections} />
+        </div>
+      </section>
+
       <section aria-labelledby="objetivos">
         <h2 id="objetivos" className="text-lg font-semibold">
           Objetivos
@@ -32,6 +73,19 @@ export default function AcercaPage() {
           <li>Integrar flujo de trabajo con JFLAP mediante archivos .jff.</li>
           <li>Servir como material de estudio y demostración en presentaciones académicas.</li>
         </ul>
+      </section>
+
+      <section aria-labelledby="bibliografia">
+        <h2 id="bibliografia" className="text-lg font-semibold">
+          Bibliografía
+        </h2>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+          Referencias académicas recomendadas para profundizar en los conceptos
+          implementados en la aplicación.
+        </p>
+        <div className="mt-4">
+          <BibliographySection topics={bibliographyTopics} />
+        </div>
       </section>
 
       <section aria-labelledby="tecnologias">
@@ -67,6 +121,39 @@ export default function AcercaPage() {
                     >
                       Abrir módulo
                     </Link>
+                    {manualAnchorByConcept[c.id] && (
+                      <>
+                        {' · '}
+                        <a
+                          href={`#manual-${manualAnchorByConcept[c.id]}`}
+                          className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                        >
+                          Ver manual
+                        </a>
+                      </>
+                    )}
+                    {bibliographyAnchorByConcept[c.id] && (
+                      <>
+                        {' · '}
+                        <a
+                          href={`#bib-${bibliographyAnchorByConcept[c.id]}`}
+                          className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                        >
+                          Bibliografía
+                        </a>
+                      </>
+                    )}
+                    {c.id === 'grammar' && (
+                      <>
+                        {' · '}
+                        <a
+                          href="#bib-chomsky"
+                          className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                        >
+                          Jerarquía de Chomsky
+                        </a>
+                      </>
+                    )}
                   </>
                 )}
               </dd>
@@ -116,7 +203,8 @@ export default function AcercaPage() {
             según estructura del archivo importado.
           </li>
           <li>
-            El editor de Turing usa tabla de transiciones (no lienzo gráfico de estados).
+            La simulación de Turing solo acepta cuando se detiene en un estado de
+            aceptación sin transición aplicable.
           </li>
           <li>
             Autómatas muy grandes pueden volver lenta la simulación o la conversión AFND→AFD.

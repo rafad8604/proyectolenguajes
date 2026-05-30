@@ -217,6 +217,8 @@ export function buildSimulationTrace(
         }
       : null;
 
+  const isDfa = automaton.type === 'dfa';
+
   steps.push(
     createStep(stepIndex++, input, {
       kind: 'start',
@@ -230,15 +232,15 @@ export function buildSimulationTrace(
     })
   );
 
-  let activeStateIds: string[] =
-    automaton.type === 'dfa' ? [q0] : epsilonClosure(automaton, [q0]);
+  // AFD: un solo estado activo, sin cerraduras ε. AFND: ε-closure desde q₀.
+  let activeStateIds: string[] = isDfa ? [q0] : epsilonClosure(automaton, [q0]);
 
   if (trackNfaConfig) {
     const loop = trackNfaConfig(activeStateIds, 0);
     if (loop) return loop;
   }
 
-  if (automaton.type === 'nfa') {
+  if (!isDfa) {
     const before = [q0];
     const expanded =
       activeStateIds.length > 1 ||
@@ -270,8 +272,24 @@ export function buildSimulationTrace(
     const consumedPrefix = input.slice(0, i);
     const fromLabel = formatStateSet(automaton, activeStateIds);
 
-    if (automaton.type === 'dfa') {
+    if (isDfa) {
       const stateId = activeStateIds[0];
+      if (!stateId) {
+        steps.push(
+          createStep(stepIndex++, input, {
+            kind: 'halt',
+            activeStateIds: [],
+            inputIndex: i,
+            currentSymbol: symbol,
+            consumedPrefix,
+            appliedTransitionIds: [],
+            explanation: 'No hay estado activo en el AFD.',
+            outcome: 'rejected',
+          })
+        );
+        return { input, steps, finalOutcome: 'rejected' };
+      }
+
       const { nextIds, transitionIds } = moveDfa(automaton, stateId, symbol);
 
       if (nextIds.length === 0) {

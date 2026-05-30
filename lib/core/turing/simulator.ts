@@ -100,13 +100,51 @@ function formatTransition(
   return `δ(${q}, ${readSymbols[0]}, ${readSymbols[1]}) = (${t.writeSymbols[0]}, ${t.writeSymbols[1]}, ${t.moves[0]}, ${t.moves[1]}, ${qn})`;
 }
 
-function checkHalting(
+/** Resultado al detenerse sin transición aplicable. */
+export function resolveHaltingOutcome(
   tm: TuringMachine,
   stateId: string
-): TuringOutcome | null {
+): TuringOutcome {
   if (tm.acceptingStateIds.includes(stateId)) return 'accepted';
   if (tm.rejectingStateIds.includes(stateId)) return 'rejected';
-  return null;
+  return 'no_transition';
+}
+
+export function isTerminalTuringOutcome(outcome: TuringOutcome): boolean {
+  return (
+    outcome === 'accepted' ||
+    outcome === 'rejected' ||
+    outcome === 'no_transition' ||
+    outcome === 'step_limit'
+  );
+}
+
+/** Resultado visible para un paso concreto (no adelanta el resultado final). */
+export function resolveStepDisplayOutcome(
+  step: TuringSimStep | null | undefined,
+  trace: TuringSimulationTrace | null | undefined
+): TuringOutcome {
+  if (!step) return trace?.finalOutcome ?? 'idle';
+  if (isTerminalTuringOutcome(step.outcome)) return step.outcome;
+  return 'running';
+}
+
+function haltingExplanation(
+  tm: TuringMachine,
+  stateId: string,
+  outcome: TuringOutcome,
+  readSymbols: string[]
+): string {
+  const q = stateName(tm, stateId);
+  const read = readSymbols.join(', ');
+  switch (outcome) {
+    case 'accepted':
+      return `Sin transición definida para ${q} leyendo (${read}). El estado ${q} es de aceptación → cadena aceptada.`;
+    case 'rejected':
+      return `Sin transición definida para ${q} leyendo (${read}). El estado ${q} es de rechazo → cadena rechazada.`;
+    default:
+      return `Sin transición definida para ${q} leyendo (${read}). Simulación detenida (no es estado final).`;
+  }
 }
 
 export function buildTuringSimulationTrace(
@@ -159,28 +197,20 @@ export function buildTuringSimulationTrace(
     `Configuración inicial: estado ${stateName(tm, stateId)}, entrada «${input || 'ε'}» en la cinta 1.`
   );
 
-  let halt: TuringOutcome | null = checkHalting(tm, stateId);
-  if (halt) {
-    steps[steps.length - 1].outcome = halt;
-    steps[steps.length - 1].explanation += halt === 'accepted'
-      ? ' El estado inicial es de aceptación.'
-      : ' El estado inicial es de rechazo.';
-    return { input, steps, finalOutcome: halt };
-  }
-
   let executed = 0;
   while (executed < maxSteps) {
     const readSymbols = tapes.map((t) => getCell(t.cells, t.head, blank));
     const transition = findTransition(tm, stateId, readSymbols);
 
     if (!transition) {
+      const haltOutcome = resolveHaltingOutcome(tm, stateId);
       pushStep(
-        'no_transition',
+        haltOutcome,
         readSymbols,
         null,
-        `No hay transición definida para estado ${stateName(tm, stateId)} leyendo (${readSymbols.join(', ')}). Simulación detenida.`
+        haltingExplanation(tm, stateId, haltOutcome, readSymbols)
       );
-      return { input, steps, finalOutcome: 'no_transition' };
+      return { input, steps, finalOutcome: haltOutcome };
     }
 
     for (let i = 0; i < tm.tapeCount; i++) {
@@ -190,28 +220,17 @@ export function buildTuringSimulationTrace(
     stateId = transition.to;
     executed += 1;
 
-    const outcomeAfter = checkHalting(tm, stateId) ?? 'running';
     pushStep(
-      outcomeAfter,
+      'running',
       readSymbols,
       transition.id,
       `Paso ${executed}: ${formatTransition(tm, transition, readSymbols)}.`
     );
-
-    if (outcomeAfter === 'accepted') {
-      steps[steps.length - 1].explanation +=
-        ` Se alcanzó el estado de aceptación ${stateName(tm, stateId)}.`;
-      return { input, steps, finalOutcome: 'accepted' };
-    }
-    if (outcomeAfter === 'rejected') {
-      steps[steps.length - 1].explanation +=
-        ` Se alcanzó el estado de rechazo ${stateName(tm, stateId)}.`;
-      return { input, steps, finalOutcome: 'rejected' };
-    }
   }
 
   steps[steps.length - 1].outcome = 'step_limit';
-  steps[steps.length - 1].explanation += ` Límite de ${maxSteps} pasos alcanzado.`;
+  steps[steps.length - 1].explanation +=
+    ` Límite de ${maxSteps} pasos alcanzado.`;
   return { input, steps, finalOutcome: 'step_limit' };
 }
 
@@ -226,9 +245,24 @@ export function getTuringOutcomeLabel(outcome: TuringOutcome): string {
     case 'rejected':
       return 'Rechazada';
     case 'no_transition':
-      return 'Sin transición';
+      return 'Detenida (sin transición)';
     case 'step_limit':
       return 'Límite de pasos';
+  }
+}
+
+export function getTuringOutcomeDetail(outcome: TuringOutcome): string {
+  switch (outcome) {
+    case 'accepted':
+      return 'Aceptada: se detuvo en un estado de aceptación sin transición aplicable.';
+    case 'rejected':
+      return 'Rechazada: se detuvo en un estado de rechazo sin transición aplicable.';
+    case 'no_transition':
+      return 'Detenida: no hay transición definida y el estado actual no es final.';
+    case 'step_limit':
+      return 'Límite alcanzado: se superó el máximo de pasos configurado.';
+    default:
+      return '';
   }
 }
 

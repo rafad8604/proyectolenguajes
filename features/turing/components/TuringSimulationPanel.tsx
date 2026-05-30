@@ -3,7 +3,12 @@
 import { useEffect, useMemo } from 'react';
 import { useTuringStore } from '../store/turing-store';
 import { useTuringSimulationStore } from '../store/turing-simulation-store';
-import { getTuringOutcomeLabel } from 'lib/core/turing';
+import {
+  buildTuringSimulationTrace,
+  getTuringOutcomeLabel,
+  getTuringOutcomeDetail,
+  resolveStepDisplayOutcome,
+} from 'lib/core/turing';
 import { TapeView } from './TapeView';
 import { cn } from 'lib/utils/cn';
 import { TURING_PRESETS } from '../examples/presets';
@@ -29,8 +34,8 @@ export function TuringSimulationPanel() {
   const resetSimulation = useTuringSimulationStore((s) => s.resetSimulation);
 
   const currentStep = trace?.steps[currentStepIndex] ?? null;
-  const outcome =
-    currentStep?.outcome ?? trace?.finalOutcome ?? 'idle';
+  const outcome = resolveStepDisplayOutcome(currentStep, trace);
+  const outcomeDetail = getTuringOutcomeDetail(outcome);
 
   const stateName = (id: string) =>
     machine.states.find((s) => s.id === id)?.name ?? id;
@@ -175,12 +180,16 @@ export function TuringSimulationPanel() {
                   className={cn(
                     outcome === 'accepted' && 'text-green-600',
                     outcome === 'rejected' && 'text-red-600',
-                    outcome === 'no_transition' && 'text-amber-600'
+                    outcome === 'no_transition' && 'text-amber-600',
+                    outcome === 'step_limit' && 'text-amber-600'
                   )}
                 >
                   {getTuringOutcomeLabel(outcome)}
                 </strong>
               </p>
+              {outcomeDetail && (
+                <p className="mt-1 text-xs text-neutral-500">{outcomeDetail}</p>
+              )}
             </div>
             <div className="rounded-lg border bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-900/50">
               <p className="text-neutral-700 dark:text-neutral-300">

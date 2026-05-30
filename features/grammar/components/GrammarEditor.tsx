@@ -14,10 +14,16 @@ import {
   getExampleForType,
 } from 'lib/core/grammar/chomsky-presets';
 import { EPSILON_SYMBOL } from 'lib/core/automata';
+import {
+  EPSILON_INPUT_HELP,
+  findReservedEpsilonTerminals,
+  reservedTerminalWarning,
+} from 'lib/core/grammar/epsilon';
 import { downloadTextFile } from 'lib/utils/download';
 import { cn } from 'lib/utils/cn';
 import { ChomskyHierarchyPanel } from './ChomskyHierarchyPanel';
 import { GrammarDerivationPanel } from './GrammarDerivationPanel';
+import { GrammarToAutomatonPanel } from './GrammarToAutomatonPanel';
 
 const CHOMSKY_TYPES: ChomskyType[] = [3, 2, 1, 0];
 
@@ -89,6 +95,11 @@ export function GrammarEditor() {
   const productionLines = grammar ? groupProductions(grammar) : [];
   const textForm = grammar ? formatGrammarAsText(grammar) : '';
   const typeHelp = TYPE_HELP[selectedType];
+  const reservedTerminalNames = useMemo(
+    () => findReservedEpsilonTerminals(terminalsText.split(/[,;\s]+/).map((s) => s.trim()).filter(Boolean)),
+    [terminalsText]
+  );
+  const reservedTerminalMsg = reservedTerminalWarning(reservedTerminalNames);
 
   const handleCopy = async () => {
     if (!textForm) return;
@@ -224,9 +235,15 @@ export function GrammarEditor() {
         <span className="mt-1 block text-xs text-neutral-500">
           Una regla por línea. Usa <code className="font-mono">-&gt;</code>,{' '}
           <code className="font-mono">→</code> o <code className="font-mono">=&gt;</code>.
-          Alternativas con <code className="font-mono">|</code>. Épsilon: ε.
+          Alternativas con <code className="font-mono">|</code>. {EPSILON_INPUT_HELP}
         </span>
       </label>
+
+      {reservedTerminalMsg && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          {reservedTerminalMsg}
+        </div>
+      )}
 
       {!validation.valid && validation.issues.length > 0 && (
         <ul className="space-y-1 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
@@ -306,6 +323,19 @@ export function GrammarEditor() {
           </section>
 
           <GrammarDerivationPanel grammar={grammar} grammarType={selectedType} />
+
+          {(selectedType === 3 || classification?.inferredType === 3) && (
+            <section className="rounded-lg border p-4 dark:border-neutral-700">
+              <h3 className="text-sm font-semibold">Autómata equivalente</h3>
+              <p className="mt-1 text-xs text-neutral-500">
+                Convierte una gramática regular por la derecha en un AFND (y opcionalmente
+                en AFD desde el módulo de conversión).
+              </p>
+              <div className="mt-4">
+                <GrammarToAutomatonPanel grammar={grammar} />
+              </div>
+            </section>
+          )}
 
           <pre className="overflow-x-auto rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs font-mono dark:border-neutral-700 dark:bg-neutral-900/50">
             {textForm}

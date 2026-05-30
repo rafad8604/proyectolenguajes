@@ -16,8 +16,8 @@ export default function GramaticasPage() {
         <h1 className="text-2xl font-bold tracking-tight">Gramáticas formales</h1>
         <p className="mt-2 max-w-3xl text-neutral-600 dark:text-neutral-400">
           Ingresa una gramática, valida sus producciones y clasifícala según la
-          jerarquía de Chomsky. También puedes generar una gramática regular (tipo
-          3) equivalente a un autómata finito.
+          jerarquía de Chomsky. Puedes convertir en ambos sentidos entre gramática
+          regular (tipo 3) y autómata finito.
         </p>
       </header>
 

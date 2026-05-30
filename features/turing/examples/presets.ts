@@ -1,6 +1,6 @@
 import type { TuringMachine } from 'types/turing';
 
-/** MT 1 banda: acepta cadenas que terminan en «1». */
+/** MT 1 banda: acepta cadenas sobre {0,1} que terminan en «1». */
 export const TM_ACCEPTS_ENDS_WITH_1: TuringMachine = {
   id: 'preset_tm_1',
   name: 'MT — termina en 1',
@@ -17,16 +17,15 @@ export const TM_ACCEPTS_ENDS_WITH_1: TuringMachine = {
     { id: 'tm_t0', from: 'tm_q0', to: 'tm_q0', readSymbols: ['0'], writeSymbols: ['0'], moves: ['R'] },
     { id: 'tm_t1', from: 'tm_q0', to: 'tm_q1', readSymbols: ['1'], writeSymbols: ['1'], moves: ['R'] },
     { id: 'tm_t2', from: 'tm_q0', to: 'tm_qr', readSymbols: ['_'], writeSymbols: ['_'], moves: ['S'] },
-    { id: 'tm_t3', from: 'tm_q1', to: 'tm_q1', readSymbols: ['0'], writeSymbols: ['0'], moves: ['R'] },
-    { id: 'tm_t4', from: 'tm_q1', to: 'tm_q1', readSymbols: ['1'], writeSymbols: ['1'], moves: ['R'] },
-    { id: 'tm_t5', from: 'tm_q1', to: 'tm_q1', readSymbols: ['_'], writeSymbols: ['_'], moves: ['S'] },
+    { id: 'tm_t3', from: 'tm_q1', to: 'tm_q1', readSymbols: ['1'], writeSymbols: ['1'], moves: ['R'] },
+    { id: 'tm_t4', from: 'tm_q1', to: 'tm_q0', readSymbols: ['0'], writeSymbols: ['0'], moves: ['R'] },
   ],
   initialStateId: 'tm_q0',
   acceptingStateIds: ['tm_q1'],
   rejectingStateIds: ['tm_qr'],
 };
 
-/** MT 1 banda: acepta solo la cadena vacía (rechaza cualquier símbolo). */
+/** MT 1 banda: acepta solo la cadena vacía. */
 export const TM_ACCEPTS_EMPTY: TuringMachine = {
   id: 'preset_tm_empty',
   name: 'MT — solo ε',
@@ -39,7 +38,6 @@ export const TM_ACCEPTS_EMPTY: TuringMachine = {
     { id: 'tm_e_qr', name: 'qr', isInitial: false, isAccepting: false, position: { x: 120, y: 220 } },
   ],
   transitions: [
-    { id: 'tm_e_t0', from: 'tm_e_q0', to: 'tm_e_q0', readSymbols: ['_'], writeSymbols: ['_'], moves: ['S'] },
     { id: 'tm_e_t1', from: 'tm_e_q0', to: 'tm_e_qr', readSymbols: ['a'], writeSymbols: ['a'], moves: ['S'] },
     { id: 'tm_e_t2', from: 'tm_e_q0', to: 'tm_e_qr', readSymbols: ['b'], writeSymbols: ['b'], moves: ['S'] },
   ],
@@ -48,7 +46,7 @@ export const TM_ACCEPTS_EMPTY: TuringMachine = {
   rejectingStateIds: ['tm_e_qr'],
 };
 
-/** MT 2 bandas: recorre la entrada en banda 1 con banda 2 en blanco. */
+/** MT 2 bandas: recorre la entrada en banda 1; acepta al llegar al blanco con banda 2 vacía. */
 export const TM_TWO_TAPE_SCAN: TuringMachine = {
   id: 'preset_tm_2tape',
   name: 'MT — escaneo 2 bandas',
@@ -72,8 +70,30 @@ export const TM_TWO_TAPE_SCAN: TuringMachine = {
   rejectingStateIds: ['tm2_qr'],
 };
 
+/** MT 1 banda: no tiene transición para el símbolo «2». */
+export const TM_NO_TRANSITION_ON_2: TuringMachine = {
+  id: 'preset_tm_no_trans',
+  name: 'MT — sin δ para 2',
+  tapeCount: 1,
+  inputAlphabet: ['0', '1', '2'],
+  tapeAlphabet: ['0', '1', '2', '_'],
+  blankSymbol: '_',
+  states: [
+    { id: 'tm_nt_q0', name: 'q0', isInitial: true, isAccepting: false, position: { x: 100, y: 100 } },
+    { id: 'tm_nt_qa', name: 'qa', isInitial: false, isAccepting: true, position: { x: 280, y: 100 } },
+  ],
+  transitions: [
+    { id: 'tm_nt_t0', from: 'tm_nt_q0', to: 'tm_nt_q0', readSymbols: ['0'], writeSymbols: ['0'], moves: ['R'] },
+    { id: 'tm_nt_t1', from: 'tm_nt_q0', to: 'tm_nt_q0', readSymbols: ['1'], writeSymbols: ['1'], moves: ['R'] },
+  ],
+  initialStateId: 'tm_nt_q0',
+  acceptingStateIds: ['tm_nt_qa'],
+  rejectingStateIds: [],
+};
+
 export const TURING_PRESETS = [
   { id: 'tm-ends-1', label: 'MT: termina en 1', machine: TM_ACCEPTS_ENDS_WITH_1 },
   { id: 'tm-empty', label: 'MT: solo ε', machine: TM_ACCEPTS_EMPTY },
   { id: 'tm-2tape', label: 'MT: 2 bandas (marcador)', machine: TM_TWO_TAPE_SCAN },
+  { id: 'tm-no-trans', label: 'MT: sin δ para 2', machine: TM_NO_TRANSITION_ON_2 },
 ] as const;

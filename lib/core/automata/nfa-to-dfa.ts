@@ -4,6 +4,7 @@ import type { Transition } from 'types/transition';
 import { deriveAlphabet } from './alphabet';
 import { epsilonClosure, sortStateIds } from './epsilon-closure';
 import { generateId } from './factory';
+import { sanitizeDeterministicAutomaton } from './sanitize-dfa';
 
 export interface ConversionTableRow {
   sourceDfaStateId: string;
@@ -212,6 +213,7 @@ export function convertNfaToDfa(nfa: Automaton): NfaToDfaResult {
         from: source.id,
         to: targetId,
         symbol,
+        isEpsilon: false,
       });
 
       table.push({
@@ -246,7 +248,7 @@ export function convertNfaToDfa(nfa: Automaton): NfaToDfaResult {
     `Conversión completada: ${states.length} estado(es) en el AFD, ${dfaTransitions.length} transición(es). Los subconjuntos que contienen un estado final del AFND se marcan como finales.`
   );
 
-  const dfa: Automaton = {
+  const dfa: Automaton = sanitizeDeterministicAutomaton({
     id: generateId('auto'),
     name: `${nfa.name} → AFD`,
     type: 'dfa',
@@ -255,7 +257,7 @@ export function convertNfaToDfa(nfa: Automaton): NfaToDfaResult {
     transitions: dfaTransitions,
     initialStateId,
     acceptingStateIds,
-  };
+  });
 
   return { dfa, table, steps };
 }

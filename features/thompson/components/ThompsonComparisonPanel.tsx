@@ -7,8 +7,7 @@ import {
   compareSimulations,
   formatVisitedStates,
   getOutcomeLabel,
-  resolveTraceStepIndex,
-  unifiedSimulationStepCount,
+  getStepSymbolDisplay,
   type SimulationComparison,
 } from 'lib/core/automata';
 import { AutomatonCanvas } from 'features/automata/components/automaton-canvas';
@@ -52,7 +51,8 @@ export function ThompsonComparisonPanel({
   const [comparison, setComparison] = useState<SimulationComparison | null>(
     null
   );
-  const [stepIndex, setStepIndex] = useState(0);
+  const [nfaStepIndex, setNfaStepIndex] = useState(0);
+  const [dfaStepIndex, setDfaStepIndex] = useState(0);
   const [playbackSpeedMs, setPlaybackSpeedMs] = useState<number>(
     PLAYBACK_SPEED_OPTIONS[1].ms
   );
@@ -61,41 +61,48 @@ export function ThompsonComparisonPanel({
   const handleSimulate = useCallback(() => {
     const result = compareSimulations(nfa, dfa, input);
     setComparison(result);
-    setStepIndex(0);
+    setNfaStepIndex(0);
+    setDfaStepIndex(0);
     setIsPlaying(false);
   }, [nfa, dfa, input]);
 
   const nfaTrace = comparison?.nfaTrace ?? null;
   const dfaTrace = comparison?.dfaTrace ?? null;
-  const unifiedSteps = unifiedSimulationStepCount(nfaTrace, dfaTrace);
-  const canStep = unifiedSteps > 0 && !nfaTrace?.error;
-  const atEnd = unifiedSteps > 0 && stepIndex >= unifiedSteps - 1;
-  const atStart = stepIndex <= 0;
-  const nfaStepIndex = resolveTraceStepIndex(nfaTrace, stepIndex);
-  const dfaStepIndex = resolveTraceStepIndex(dfaTrace, stepIndex);
+  const nfaStepCount = nfaTrace?.steps.length ?? 0;
+  const dfaStepCount = dfaTrace?.steps.length ?? 0;
+  const nfaMax = Math.max(0, nfaStepCount - 1);
+  const dfaMax = Math.max(0, dfaStepCount - 1);
+  const canStep = nfaStepCount > 0 && !nfaTrace?.error;
+  const nfaAtEnd = nfaStepIndex >= nfaMax;
+  const dfaAtEnd = dfaStepIndex >= dfaMax;
+  const bothAtEnd = nfaAtEnd && dfaAtEnd;
+
+  const nfaCurrentStep = nfaTrace?.steps[nfaStepIndex] ?? null;
+  const dfaCurrentStep = dfaTrace?.steps[dfaStepIndex] ?? null;
 
   useEffect(() => {
-    if (!isPlaying || unifiedSteps === 0) return;
+    if (!isPlaying || !comparison) return;
 
     const timer = window.setInterval(() => {
-      setStepIndex((i) => {
-        const max = unifiedSteps - 1;
-        if (i >= max) {
-          setIsPlaying(false);
-          return i;
-        }
-        return i + 1;
-      });
+      setNfaStepIndex((i) => (i >= nfaMax ? i : i + 1));
+      setDfaStepIndex((i) => (i >= dfaMax ? i : i + 1));
     }, playbackSpeedMs);
 
     return () => window.clearInterval(timer);
-  }, [isPlaying, unifiedSteps, playbackSpeedMs]);
+  }, [isPlaying, comparison, playbackSpeedMs, nfaMax, dfaMax]);
 
-  const currentStep = nfaTrace?.steps[nfaStepIndex] ?? null;
+  useEffect(() => {
+    if (isPlaying && bothAtEnd) {
+      setIsPlaying(false);
+    }
+  }, [isPlaying, bothAtEnd]);
 
   const handleRunAll = () => {
     if (!canStep) return;
-    if (atEnd) setStepIndex(0);
+    if (bothAtEnd) {
+      setNfaStepIndex(0);
+      setDfaStepIndex(0);
+    }
     setIsPlaying(true);
   };
 
@@ -143,7 +150,7 @@ export function ThompsonComparisonPanel({
               {comparison?.structuralSummary.nfaTransitionCount ??
                 nfa.transitions.length}
               {comparison?.structuralSummary.nfaHasEpsilon !== false
-                ? ', con ε'
+                ? ', con ε en ejecución'
                 : ''}
             </p>
             <p>
@@ -151,6 +158,9 @@ export function ThompsonComparisonPanel({
               , |δ| ={' '}
               {comparison?.structuralSummary.dfaTransitionCount ??
                 dfa.transitions.length}
+              {comparison?.structuralSummary.dfaHasEpsilon
+                ? ', ⚠ con ε (no debería)'
+                : ', sin ε (símbolo a símbolo)'}
             </p>
           </div>
 
@@ -179,82 +189,140 @@ export function ThompsonComparisonPanel({
             </button>
           </div>
 
-          {nfaTrace && !nfaTrace.error && (
-            <SimulationTape
-              input={nfaTrace.input}
-              consumedPrefix={currentStep?.consumedPrefix ?? ''}
-              currentSymbol={currentStep?.currentSymbol ?? null}
-              inputIndex={currentStep?.inputIndex ?? 0}
-            />
-          )}
-
           {nfaTrace?.error && (
             <p className="text-sm text-red-600 dark:text-red-400">
               {nfaTrace.error}
             </p>
           )}
 
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={playbackSpeedMs}
-              onChange={(e) => setPlaybackSpeedMs(Number(e.target.value))}
-              className="rounded-md border px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
-              aria-label="Velocidad"
-            >
-              {PLAYBACK_SPEED_OPTIONS.map((opt) => (
-                <option key={opt.ms} value={opt.ms}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => {
-                setStepIndex((i) => Math.max(i - 1, 0));
-                setIsPlaying(false);
-              }}
-              disabled={!canStep || atStart || isPlaying}
-              className="rounded border px-2 py-1 text-xs disabled:opacity-40"
-            >
-              ← Anterior
-            </button>
-            <button
-              type="button"
-              onClick={() => setStepIndex((i) => i + 1)}
-              disabled={!canStep || atEnd || isPlaying}
-              className="rounded border px-2 py-1 text-xs disabled:opacity-40"
-            >
-              Siguiente →
-            </button>
-            <button
-              type="button"
-              onClick={handleRunAll}
-              disabled={!canStep || isPlaying}
-              className="rounded border px-2 py-1 text-xs disabled:opacity-40"
-            >
-              Ejecutar todo
-            </button>
-            {isPlaying ? (
-              <button
-                type="button"
-                onClick={() => setIsPlaying(false)}
-                className="rounded bg-amber-600 px-2 py-1 text-xs text-white"
-              >
-                Pausa
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => {
-                setComparison(null);
-                setStepIndex(0);
-                setIsPlaying(false);
-              }}
-              className="rounded border px-2 py-1 text-xs"
-            >
-              Reiniciar
-            </button>
-          </div>
+          {canStep && (
+            <>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div>
+                  <p className="mb-1 text-xs font-medium text-neutral-500">
+                    Cinta AFND (paso {nfaStepIndex + 1}/{nfaStepCount})
+                  </p>
+                  <SimulationTape
+                    input={nfaTrace!.input}
+                    consumedPrefix={nfaCurrentStep?.consumedPrefix ?? ''}
+                    currentSymbol={nfaCurrentStep?.currentSymbol ?? null}
+                    inputIndex={nfaCurrentStep?.inputIndex ?? 0}
+                  />
+                </div>
+                <div>
+                  <p className="mb-1 text-xs font-medium text-neutral-500">
+                    Cinta AFD (paso {dfaStepIndex + 1}/{dfaStepCount})
+                  </p>
+                  <SimulationTape
+                    input={dfaTrace!.input}
+                    consumedPrefix={dfaCurrentStep?.consumedPrefix ?? ''}
+                    currentSymbol={dfaCurrentStep?.currentSymbol ?? null}
+                    inputIndex={dfaCurrentStep?.inputIndex ?? 0}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  value={playbackSpeedMs}
+                  onChange={(e) => setPlaybackSpeedMs(Number(e.target.value))}
+                  className="rounded-md border px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+                  aria-label="Velocidad"
+                >
+                  {PLAYBACK_SPEED_OPTIONS.map((opt) => (
+                    <option key={opt.ms} value={opt.ms}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNfaStepIndex((i) => Math.max(i - 1, 0));
+                    setIsPlaying(false);
+                  }}
+                  disabled={!canStep || nfaStepIndex <= 0 || isPlaying}
+                  className="rounded border px-2 py-1 text-xs disabled:opacity-40"
+                >
+                  ← AFND
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNfaStepIndex((i) => Math.min(i + 1, nfaMax));
+                    setIsPlaying(false);
+                  }}
+                  disabled={!canStep || nfaAtEnd || isPlaying}
+                  className="rounded border px-2 py-1 text-xs disabled:opacity-40"
+                >
+                  AFND →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDfaStepIndex((i) => Math.max(i - 1, 0));
+                    setIsPlaying(false);
+                  }}
+                  disabled={!canStep || dfaStepIndex <= 0 || isPlaying}
+                  className="rounded border px-2 py-1 text-xs disabled:opacity-40"
+                >
+                  ← AFD
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDfaStepIndex((i) => Math.min(i + 1, dfaMax));
+                    setIsPlaying(false);
+                  }}
+                  disabled={!canStep || dfaAtEnd || isPlaying}
+                  className="rounded border px-2 py-1 text-xs disabled:opacity-40"
+                >
+                  AFD →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNfaStepIndex((i) => Math.min(i + 1, nfaMax));
+                    setDfaStepIndex((i) => Math.min(i + 1, dfaMax));
+                    setIsPlaying(false);
+                  }}
+                  disabled={!canStep || bothAtEnd || isPlaying}
+                  className="rounded border px-2 py-1 text-xs disabled:opacity-40"
+                >
+                  Siguiente ambos
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRunAll}
+                  disabled={!canStep || isPlaying}
+                  className="rounded border px-2 py-1 text-xs disabled:opacity-40"
+                >
+                  Ejecutar todo
+                </button>
+                {isPlaying ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsPlaying(false)}
+                    className="rounded bg-amber-600 px-2 py-1 text-xs text-white"
+                  >
+                    Pausa
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setComparison(null);
+                    setNfaStepIndex(0);
+                    setDfaStepIndex(0);
+                    setIsPlaying(false);
+                  }}
+                  className="rounded border px-2 py-1 text-xs"
+                >
+                  Reiniciar
+                </button>
+              </div>
+            </>
+          )}
 
           <div className="grid gap-4 lg:grid-cols-2">
             <div>
@@ -275,6 +343,16 @@ export function ThompsonComparisonPanel({
               <p className="mt-2 text-xs">
                 <span className="text-neutral-500">Recorrido:</span> {nfaVisited}
               </p>
+              {nfaCurrentStep && (
+                <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+                  {getStepSymbolDisplay(nfaCurrentStep) !== '—' && (
+                    <span className="font-mono">
+                      [{getStepSymbolDisplay(nfaCurrentStep)}]{' '}
+                    </span>
+                  )}
+                  {nfaCurrentStep.explanation}
+                </p>
+              )}
             </div>
             <div>
               <h4 className="mb-1 text-xs font-semibold text-neutral-500">
@@ -294,6 +372,14 @@ export function ThompsonComparisonPanel({
               <p className="mt-2 text-xs">
                 <span className="text-neutral-500">Recorrido:</span> {dfaVisited}
               </p>
+              {dfaCurrentStep && (
+                <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+                  {dfaCurrentStep.kind === 'consume' && dfaCurrentStep.currentSymbol && (
+                    <span className="font-mono">[{dfaCurrentStep.currentSymbol}] </span>
+                  )}
+                  {dfaCurrentStep.explanation}
+                </p>
+              )}
             </div>
           </div>
         </div>

@@ -7,7 +7,11 @@ export { patchTuringTransitionVisual } from './layout';
 export {
   buildTuringSimulationTrace,
   getTuringOutcomeLabel,
+  getTuringOutcomeDetail,
   getVisibleTapeRange,
+  isTerminalTuringOutcome,
+  resolveHaltingOutcome,
+  resolveStepDisplayOutcome,
 } from './simulator';
 export { formatTransitionLabel } from './formatTransitionLabel';
 export type {

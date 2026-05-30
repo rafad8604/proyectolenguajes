@@ -36,6 +36,11 @@ function structuralSummary(nfa: Automaton, dfa: Automaton): StructuralSummary {
   };
 }
 
+/** Indica si la traza incluye pasos de cerradura ε (solo esperado en AFND). */
+export function traceHasEpsilonSteps(trace: SimulationTrace): boolean {
+  return trace.steps.some((step) => step.kind === 'epsilon');
+}
+
 /** Simula la misma cadena en NFA y AFD y compara resultados. */
 export function compareSimulations(
   nfa: Automaton,

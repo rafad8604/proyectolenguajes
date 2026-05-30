@@ -51,17 +51,24 @@ export function GrammarDerivationPanel({
   grammar,
   grammarType,
 }: GrammarDerivationPanelProps) {
-  const [targetWord, setTargetWord] = useState('aab');
+  const [targetWord, setTargetWord] = useState('aba');
   const [maxSteps, setMaxSteps] = useState(DEFAULT_DERIVATION_LIMITS.maxSteps);
+  const [maxFormLength, setMaxFormLength] = useState(
+    DEFAULT_DERIVATION_LIMITS.maxFormLength
+  );
+  const [maxNodes, setMaxNodes] = useState(
+    DEFAULT_DERIVATION_LIMITS.maxNodesExplored
+  );
   const [submittedWord, setSubmittedWord] = useState<string | null>(null);
 
   const result = useMemo(() => {
     if (submittedWord === null) return null;
     return deriveWord(grammar, submittedWord, grammarType, {
-      ...DEFAULT_DERIVATION_LIMITS,
       maxSteps,
+      maxFormLength,
+      maxNodesExplored: maxNodes,
     });
-  }, [grammar, submittedWord, grammarType, maxSteps]);
+  }, [grammar, submittedWord, grammarType, maxSteps, maxFormLength, maxNodes]);
 
   const handleDerive = () => {
     setSubmittedWord(targetWord);
@@ -87,7 +94,7 @@ export function GrammarDerivationPanel({
       {!isRestrictedType && (
         <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
           Modo asistido: para Tipo 1 y Tipo 0 la búsqueda está acotada. En general
-          el problema puede ser <strong>indedecidable</strong>; solo se muestran
+          el problema puede ser <strong>indecidible</strong>; solo se muestran
           derivaciones encontradas dentro del límite.
         </div>
       )}
@@ -100,7 +107,7 @@ export function GrammarDerivationPanel({
             value={targetWord}
             onChange={(e) => setTargetWord(e.target.value)}
             className="mt-1 w-full rounded-md border px-3 py-2 font-mono text-sm dark:border-neutral-600 dark:bg-neutral-800"
-            placeholder="aab"
+            placeholder="aba (vacío: ε, epsilon, lambda)"
           />
         </label>
         <label className="text-sm">
@@ -112,6 +119,31 @@ export function GrammarDerivationPanel({
             value={maxSteps}
             onChange={(e) => setMaxSteps(Number(e.target.value) || 40)}
             className="mt-1 w-24 rounded-md border px-3 py-2 font-mono text-sm dark:border-neutral-600 dark:bg-neutral-800"
+          />
+        </label>
+        <label className="text-sm">
+          <span className="font-medium">Máx. longitud</span>
+          <input
+            type="number"
+            min={4}
+            max={256}
+            value={maxFormLength}
+            onChange={(e) => setMaxFormLength(Number(e.target.value) || 64)}
+            className="mt-1 w-24 rounded-md border px-3 py-2 font-mono text-sm dark:border-neutral-600 dark:bg-neutral-800"
+            title="Longitud máxima de la forma sentencial intermedia"
+          />
+        </label>
+        <label className="text-sm">
+          <span className="font-medium">Máx. nodos</span>
+          <input
+            type="number"
+            min={100}
+            max={50000}
+            step={500}
+            value={maxNodes}
+            onChange={(e) => setMaxNodes(Number(e.target.value) || 8000)}
+            className="mt-1 w-28 rounded-md border px-3 py-2 font-mono text-sm dark:border-neutral-600 dark:bg-neutral-800"
+            title="Configuraciones exploradas en la búsqueda"
           />
         </label>
         <button
