@@ -180,37 +180,6 @@ export default function AcercaPage() {
           ))}
         </ul>
       </section>
-
-      <section
-        className="rounded-lg border border-amber-200 bg-amber-50/80 p-4 text-sm dark:border-amber-900 dark:bg-amber-950/40"
-        aria-labelledby="limitaciones"
-      >
-        <h2 id="limitaciones" className="font-semibold text-amber-950 dark:text-amber-100">
-          Limitaciones conocidas
-        </h2>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-amber-900 dark:text-amber-200">
-          <li>No hay persistencia: al recargar la página se pierde el trabajo no exportado.</li>
-          <li>
-            La clasificación de gramáticas es sintáctica (forma de producciones), no
-            decide la clase del lenguaje en todos los casos.
-          </li>
-          <li>
-            El lema de bombeo no verifica automáticamente si xy^i z ∈ L; esas
-            conclusiones son manuales.
-          </li>
-          <li>
-            JFLAP: soporte orientado a autómatas finitos y Turing de 1 banda; 2 bandas
-            según estructura del archivo importado.
-          </li>
-          <li>
-            La simulación de Turing solo acepta cuando se detiene en un estado de
-            aceptación sin transición aplicable.
-          </li>
-          <li>
-            Autómatas muy grandes pueden volver lenta la simulación o la conversión AFND→AFD.
-          </li>
-        </ul>
-      </section>
     </section>
   );
 }
