@@ -1,7 +1,10 @@
+import { uiVisibility } from './ui-visibility';
+
 export interface NavModule {
   href: string;
   label: string;
   description: string;
+  showInNav?: boolean;
 }
 
 export const mainModules: NavModule[] = [
@@ -46,6 +49,7 @@ export const mainModules: NavModule[] = [
     label: 'JFLAP',
     description:
       'Importar y exportar archivos .jff compatibles con JFLAP.',
+    showInNav: uiVisibility.jflapNavLink,
   },
 ];
 

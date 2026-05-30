@@ -34,7 +34,9 @@ export function Navbar() {
         className="mt-4 -mx-1 flex gap-1 overflow-x-auto pb-1"
         aria-label="Módulos principales"
       >
-        {mainModules.map((module) => {
+        {mainModules
+          .filter((module) => module.showInNav !== false)
+          .map((module) => {
           const isActive =
             pathname === module.href || pathname.startsWith(`${module.href}/`);
 
