@@ -1,8 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
+import type { Automaton } from 'types/automaton';
 import type { Grammar } from 'types/grammar';
+import type { TransitionVisual } from 'types/transition-visual';
 import { AutomatonCanvas } from 'features/automata/components/automaton-canvas';
 import { SimulationPanel } from 'features/automata/components/simulation-panel';
 import { AutomatonTransitionTableReadonly } from 'features/automata/components/automaton-transition-table-readonly';
@@ -16,9 +18,9 @@ import {
   checkType3,
   getRegularGrammarOrientation,
 } from 'lib/core/grammar/chomsky-validation';
+import { patchStatePosition, patchTransitionVisual } from 'lib/core/automata';
 import { exportToJff, defaultJffFilename } from 'lib/jflap';
 import { downloadTextFile } from 'lib/utils/download';
-import { cn } from 'lib/utils/cn';
 
 interface GrammarToAutomatonPanelProps {
   grammar: Grammar;
@@ -28,6 +30,7 @@ export function GrammarToAutomatonPanel({ grammar }: GrammarToAutomatonPanelProp
   const loadAutomaton = useAutomatonStore((s) => s.loadAutomaton);
   const [showResult, setShowResult] = useState(false);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
+  const [displayAutomaton, setDisplayAutomaton] = useState<Automaton | null>(null);
 
   const conversion = useMemo(() => {
     if (!showResult) return null;
@@ -41,21 +44,48 @@ export function GrammarToAutomatonPanel({ grammar }: GrammarToAutomatonPanelProp
     return t3.belongs && getRegularGrammarOrientation(grammar) === 'right';
   }, [grammar]);
 
+  const handlePositionChange = useCallback(
+    (stateId: string, position: { x: number; y: number }) => {
+      setDisplayAutomaton((prev) =>
+        prev ? patchStatePosition(prev, stateId, position) : prev
+      );
+    },
+    []
+  );
+
+  const handleTransitionVisualChange = useCallback(
+    (transitionId: string, partial: Partial<TransitionVisual>) => {
+      setDisplayAutomaton((prev) =>
+        prev ? patchTransitionVisual(prev, transitionId, partial) : prev
+      );
+    },
+    []
+  );
+
   const handleGenerate = () => {
     setShowResult(true);
     setExportMsg(null);
+    const result = finiteAutomatonFromRegularGrammar(grammar);
+    if (result.automaton && !result.error) {
+      setDisplayAutomaton(structuredClone(result.automaton));
+    } else {
+      setDisplayAutomaton(null);
+    }
   };
 
   const handleLoadInEditor = () => {
-    if (!conversion?.automaton || conversion.error) return;
-    loadAutomaton(structuredClone(conversion.automaton));
+    if (!displayAutomaton) return;
+    loadAutomaton(structuredClone(displayAutomaton));
   };
 
   const handleExportJflap = () => {
-    if (!conversion?.automaton || conversion.error) return;
+    if (!displayAutomaton) return;
     try {
-      const xml = exportToJff({ kind: 'automaton', automaton: conversion.automaton });
-      const filename = defaultJffFilename({ kind: 'automaton', automaton: conversion.automaton });
+      const xml = exportToJff({ kind: 'automaton', automaton: displayAutomaton });
+      const filename = defaultJffFilename({
+        kind: 'automaton',
+        automaton: displayAutomaton,
+      });
       downloadTextFile(xml, filename);
       setExportMsg(`Archivo ${filename} descargado.`);
     } catch (err) {
@@ -102,11 +132,11 @@ export function GrammarToAutomatonPanel({ grammar }: GrammarToAutomatonPanelProp
             <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
               {conversion.error}
             </p>
-          ) : (
+          ) : displayAutomaton ? (
             <>
               <p className="text-sm text-green-800 dark:text-green-200">
-                AFND generado: {conversion.automaton.states.length} estados,{' '}
-                {conversion.automaton.transitions.length} transiciones.
+                AFND generado: {displayAutomaton.states.length} estados,{' '}
+                {displayAutomaton.transitions.length} transiciones.
               </p>
 
               {conversion.explanation.length > 0 && (
@@ -155,37 +185,32 @@ export function GrammarToAutomatonPanel({ grammar }: GrammarToAutomatonPanelProp
                 </p>
               )}
 
-              <div
-                className={cn(
-                  'h-[360px] rounded-lg border border-neutral-200 dark:border-neutral-700'
-                )}
-              >
-                <AutomatonCanvas
-                  automaton={conversion.automaton}
-                  readOnly
-                  layoutDraggable
-                />
-              </div>
+              <AutomatonCanvas
+                automaton={displayAutomaton}
+                readOnly
+                layoutDraggable
+                onStatePositionChange={handlePositionChange}
+                onTransitionVisualChange={handleTransitionVisualChange}
+                className="h-[360px]"
+                ariaLabel="AFND generado desde gramática regular"
+              />
 
               <div className="grid gap-4 lg:grid-cols-2">
                 <section className="rounded-lg border p-4 dark:border-neutral-700">
                   <h4 className="mb-3 text-sm font-semibold">Tabla de transiciones</h4>
-                  <AutomatonTransitionTableReadonly automaton={conversion.automaton} />
+                  <AutomatonTransitionTableReadonly automaton={displayAutomaton} />
                 </section>
                 <section className="rounded-lg border p-4 dark:border-neutral-700">
-                  <AutomatonFormalDefinitionReadonly automaton={conversion.automaton} />
+                  <AutomatonFormalDefinitionReadonly automaton={displayAutomaton} />
                 </section>
               </div>
 
               <section className="rounded-lg border p-4 dark:border-neutral-700">
                 <h4 className="mb-3 text-sm font-semibold">Simulación</h4>
-                <SimulationPanel
-                  automaton={conversion.automaton}
-                  showPresets={false}
-                />
+                <SimulationPanel automaton={displayAutomaton} showPresets={false} />
               </section>
             </>
-          )}
+          ) : null}
         </div>
       )}
     </div>
