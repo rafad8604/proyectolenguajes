@@ -90,7 +90,7 @@ export default function AcercaPage() {
 
       <section aria-labelledby="tecnologias">
         <h2 id="tecnologias" className="text-lg font-semibold">
-          Tecnologías
+          Tecnologías utilizadas:
         </h2>
         <p className="mt-3 text-neutral-700 dark:text-neutral-300">
           Next.js 16, React 19, TypeScript estricto, Tailwind CSS v4, Zustand para

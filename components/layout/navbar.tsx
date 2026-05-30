@@ -13,10 +13,7 @@ export function Navbar() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Link href="/" className="group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 rounded-sm">
           <p className="text-xs font-medium uppercase tracking-widest text-blue-600 dark:text-blue-400">
-            Teoría de lenguajes
-          </p>
-          <p className="text-lg font-semibold tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-            Laboratorio de Lenguajes Formales
+            Lenguajes de programación
           </p>
         </Link>
         <Link
